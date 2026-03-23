@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+
+
+
+html {
+  scroll-behavior: smooth;
+}
+/* src/fonts */
+@font-face {
+  font-family: 'NeueMontreal';
+  font-weight: 300;
+  src: url('../assets/fonts/NeueMontreal-Light.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NeueMontreal';
+  font-weight: normal;
+  src: url('../assets/fonts/NeueMontreal-Regular.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NeueMontreal';
+  font-weight: 500;
+  src: url('../assets/fonts/NeueMontreal-Medium.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NeueMontreal';
+  font-weight: 700;
+  src: url('../assets/fonts/NeueMontreal-Bold.otf') format('truetype');
+}
+
+/* custom theme */
+@theme {
+  --color-primary-100: #fef2d7;
+  --color-primary-200: #fde6af;
+  --color-primary-300: #fdd986;
+  --color-primary-400: #fccd5e;
+  --color-primary-500: #fbc036;
+  --color-primary-600: #c99a2b;
+  --color-primary-700: #977320;
+  --color-primary-800: #644d16;
+  --color-primary-900: #32260b;
+
+  --color-peach-100: #ffe5e3;
+  --color-peach-200: #ffccc7;
+  --color-peach-300: #feb2ac;
+  --color-peach-400: #fe9990;
+  --color-peach-500: #fe7f74;
+  --color-peach-600: #cb665d;
+  --color-peach-700: #984c46;
+  --color-peach-800: #66332e;
+  --color-peach-900: #331917;
+
+  --color-pink-100: #ffeef4;
+  --color-pink-200: #ffdde9;
+  --color-pink-300: #ffccdf;
+  --color-pink-400: #ffbbd4;
+  --color-pink-500: #ffaac9;
+  --color-pink-600: #cc88a1;
+  --color-pink-700: #996679;
+  --color-pink-800: #664450;
+  --color-pink-900: #332228;
+
+  --color-lightblue-100: #f4fcfe;
+  --color-lightblue-200: #eaf9fc;
+  --color-lightblue-300: #dff6fb;
+  --color-lightblue-400: #d5f3f9;
+  --color-lightblue-500: #caf0f8;
+  --color-lightblue-600: #a2c0c6;
+  --color-lightblue-700: #799095;
+  --color-lightblue-800: #516063;
+  --color-lightblue-900: #283032;
+}
+
+
+:root {
+  font-family: 'NeueMontreal', sans-serif;
+  color: #2C2C2C;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+/* Add these styles in your global CSS or Tailwind CSS configuration */
+::-webkit-scrollbar {
+  width: 6px;
+  /* Adjust the width as needed */
+  height: 6px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-500);
+  /* Set the primary color */
+  border-radius: 4px;
+  /* Add some roundness */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.5;
+  /* Fade out a bit on hover */
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--color-primary-100);
+  /* Set the track color */
+}
+
+.hover\:scrollbar-thumb-opacity-50:hover::-webkit-scrollbar-thumb {
+  opacity: 0.5;
+  /* Apply opacity on hover */
+}
+
+.hover\:scrollbar-track-opacity-50:hover::-webkit-scrollbar-track {
+  opacity: 0.5;
+  /* Apply opacity on hover */
+}
+
+
+
+
+
+
+@layer base {
+  :root {
+    --animation-delay-200: 200ms;
+    --animation-delay-300: 300ms;
+    --animation-delay-400: 400ms;
+    --animation-delay-600: 600ms;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1s ease-in-out;
+}
+
+.animate-fadeInLeft {
+  animation: fadeInLeft 1s ease-in-out;
+}
+
+.animate-fadeInRight {
+  animation: fadeInRight 1s ease-in-out;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.8s ease-in-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.8s ease-in-out;
+}
+
+.animate-slideUpSlow {
+  animation: slideUp 1.2s ease-in-out;
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.8s ease-in-out;
+  animation-delay: var(--animation-delay, 0s);
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.8s ease-in-out;
+}
+
+.animate-bounceSlow {
+  animation: bounceSlow 3s infinite ease-in-out;
+  animation-delay: var(--animation-delay, 0s);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes bounceSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animation-delay-200 { animation-delay: var(--animation-delay-200); }
+.animation-delay-300 { animation-delay: var(--animation-delay-300); }
+.animation-delay-400 { animation-delay: var(--animation-delay-400); }
+.animation-delay-600 { animation-delay: var(--animation-delay-600); }

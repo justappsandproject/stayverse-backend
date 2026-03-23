@@ -1,0 +1,32 @@
+{
+  "name": "stayverse-landing-page",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "@tailwindcss/postcss": "^4.0.6",
+    "aos": "^2.3.4",
+    "axios": "^1.7.9",
+    "next": "^16.1.0",
+    "postcss": "^8.5.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-toastify": "^11.0.5",
+    "tailwindcss": "^4.0.6"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^16.1.0",
+    "typescript": "^5"
+  }
+}

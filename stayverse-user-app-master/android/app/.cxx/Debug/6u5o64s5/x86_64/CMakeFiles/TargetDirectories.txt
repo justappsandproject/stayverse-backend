@@ -1,0 +1,2 @@
+C:/Users/USER/Desktop/Venbrino/stayverse-user-app/android/app/.cxx/Debug/6u5o64s5/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/USER/Desktop/Venbrino/stayverse-user-app/android/app/.cxx/Debug/6u5o64s5/x86_64/CMakeFiles/rebuild_cache.dir
