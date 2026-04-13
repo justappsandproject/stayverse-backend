@@ -7,17 +7,21 @@ import { VerifyNinWithSelfieResponse } from "../interfaces/dojah.interface";
 export class DojahService {
   private readonly httpClient: AxiosInstance;
   private readonly logger: Logger;
+  private readonly isConfigured: boolean;
 
   constructor(private readonly configService: ConfigService) {
     const secretKey = this.configService.get<string>('dojah.secretKey');
     const appId = this.configService.get<string>('dojah.apiKey');
     const baseUrl = this.configService.get<string>('dojah.baseUrl') || 'https://sandbox.dojah.io';
+    this.logger = new Logger(DojahService.name);
 
     if (!secretKey || !appId) {
-      throw new Error('DOJAH_SECRET_KEY and DOJAH_APP_ID are required');
+      this.isConfigured = false;
+      this.logger.warn('DOJAH not configured. KYC verification will be unavailable until keys are set.');
+      return;
     }
 
-    this.logger = new Logger(DojahService.name);
+    this.isConfigured = true;
     this.httpClient = axios.create({
       baseURL: baseUrl,
       headers: {
@@ -28,6 +32,9 @@ export class DojahService {
     });
   }
   async verifyNinWithSelfie(nin: string, selfie: string) {
+    if (!this.isConfigured || !this.httpClient) {
+      throw new BadRequestException('KYC provider is not configured');
+    }
     try {
       const response = await this.httpClient.post('/api/v1/kyc/nin/verify', {
         nin,
