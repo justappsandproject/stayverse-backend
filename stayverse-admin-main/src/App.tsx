@@ -14,6 +14,7 @@ import Transactions from "./pages/transactions";
 import EscrowsPage from "./pages/escrows";
 import HostDetails from "./pages/host-details";
 import BookingDetails from "./pages/booking-details";
+import CuratedMessagesPage from "./pages/curated-messages";
 
 const router = createBrowserRouter([
   {
@@ -67,6 +68,10 @@ const router = createBrowserRouter([
       {
         path: "escrows",
         element: <EscrowsPage />,
+      },
+      {
+        path: "curated-messages",
+        element: <CuratedMessagesPage />,
       },
       {
         path: "*",

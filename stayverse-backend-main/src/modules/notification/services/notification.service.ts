@@ -1,20 +1,31 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Roles } from 'src/common/constants/enum';
 import { UserNotification } from '../interfaces/notification.interface';
 import { FirebaseService } from 'src/common/providers/firebase.service';
+import { Model } from 'mongoose';
+import { User, UserDocument } from 'src/modules/user/schemas/user.schema';
+import { BroadcastMessageDto } from '../dto/broadcast-message.dto';
+import { CuratedMessage, CuratedMessageDocument } from '../schemas/curated-message.schema';
 
 @Injectable()
 export class NotificationService {
     private readonly logger = new Logger(NotificationService.name);
 
-    constructor(private readonly firebaseService: FirebaseService) { }
+    constructor(
+        private readonly firebaseService: FirebaseService,
+        @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+        @InjectModel(CuratedMessage.name)
+        private readonly curatedMessageModel: Model<CuratedMessageDocument>,
+    ) { }
 
     async sendToUser(
         notification: UserNotification
-    ) {
+    ): Promise<boolean> {
         const { token, title, body, extras = {} } = notification;
         if (!token) {
             this.logger.debug('No device token provided');
-            return;
+            return false;
         }
 
         const sound = 'default'; 
@@ -46,8 +57,91 @@ export class NotificationService {
             const response = await this.firebaseService.getMessaging().send(message);
             this.logger.log(`Notification sent to token: ${token}`);
             this.logger.debug(`Response: ${JSON.stringify(response)}`);
+            return true;
         } catch (error: any) {
             this.logger.error(`Error sending notification: ${error.message}`);
+            return false;
         }
+    }
+
+    async broadcastCuratedMessage(payload: BroadcastMessageDto, createdBy?: string) {
+        const roleMap: Record<BroadcastMessageDto['audience'], Roles[]> = {
+            user: [Roles.USER],
+            agent: [Roles.AGENT],
+            all: [Roles.USER, Roles.AGENT],
+        };
+
+        const curatedMessage = await this.curatedMessageModel.create({
+            audience: payload.audience,
+            title: payload.title,
+            body: payload.body,
+            extras: payload.extras ?? {},
+            createdBy: createdBy || undefined,
+        });
+
+        const targetRoles = roleMap[payload.audience];
+        const recipients = await this.userModel
+            .find({
+                role: { $in: targetRoles },
+                notificationsEnabled: true,
+                deviceToken: { $nin: [null, ''] },
+            })
+            .select('_id email role +deviceToken notificationsEnabled')
+            .lean();
+
+        let sentCount = 0;
+        for (const recipient of recipients) {
+            const sent = await this.sendToUser({
+                token: recipient.deviceToken as string,
+                title: payload.title,
+                body: payload.body,
+                extras: {
+                    ...(payload.extras || {}),
+                    type: 'curated_message',
+                    messageId: String(curatedMessage._id),
+                    audience: payload.audience,
+                    recipientRole: String(recipient.role),
+                },
+            });
+            if (sent) sentCount += 1;
+        }
+
+        return {
+            messageId: String(curatedMessage._id),
+            audience: payload.audience,
+            totalEligible: recipients.length,
+            sentCount,
+            failedCount: recipients.length - sentCount,
+        };
+    }
+
+    async listCuratedMessagesForRole(role: Roles, page = 1, limit = 20) {
+        const audienceFilter =
+            role === Roles.AGENT
+                ? { audience: { $in: ['agent', 'all'] } }
+                : { audience: { $in: ['user', 'all'] } };
+
+        const skip = (page - 1) * limit;
+        const [items, total] = await Promise.all([
+            this.curatedMessageModel
+                .find(audienceFilter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            this.curatedMessageModel.countDocuments(audienceFilter),
+        ]);
+
+        return {
+            data: items,
+            pagination: {
+                page,
+                limit,
+                totalItems: total,
+                totalPages: Math.max(1, Math.ceil(total / limit)),
+                hasNextPage: skip + items.length < total,
+                hasPreviousPage: page > 1,
+            },
+        };
     }
 }
