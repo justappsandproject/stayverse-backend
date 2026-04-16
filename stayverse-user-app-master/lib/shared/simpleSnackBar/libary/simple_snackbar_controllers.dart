@@ -89,7 +89,23 @@ class SnackbarController {
   }
 
   void _configureOverlay() {
-    _overlayState = Overlay.of(SimpleSnackBar.overlayContext!);
+    _overlayState = SimpleSnackBar.key.currentState?.overlay;
+    if (_overlayState == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _overlayState = SimpleSnackBar.key.currentState?.overlay;
+        if (_overlayState == null) {
+          if (!_transitionCompleter.isCompleted) {
+            _transitionCompleter.complete();
+          }
+          return;
+        }
+        _overlayEntries.clear();
+        _overlayEntries.addAll(_createOverlayEntries(_getBodyWidget()));
+        _overlayState!.insertAll(_overlayEntries);
+        _configureSnackBarDisplay();
+      });
+      return;
+    }
     _overlayEntries.clear();
     _overlayEntries.addAll(_createOverlayEntries(_getBodyWidget()));
     _overlayState!.insertAll(_overlayEntries);

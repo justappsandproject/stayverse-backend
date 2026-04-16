@@ -223,3 +223,29 @@ html {
 .animation-delay-300 { animation-delay: var(--animation-delay-300); }
 .animation-delay-400 { animation-delay: var(--animation-delay-400); }
 .animation-delay-600 { animation-delay: var(--animation-delay-600); }
+
+.animate-testimonial-marquee {
+  animation: testimonialMarquee 36s linear infinite;
+}
+
+.animate-testimonial-marquee-reverse {
+  animation: testimonialMarqueeReverse 40s linear infinite;
+}
+
+@keyframes testimonialMarquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes testimonialMarqueeReverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}

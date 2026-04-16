@@ -1,11 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:stayverse/core/commonLibs/common_libs.dart';
-import 'package:stayverse/core/config/constant.dart';
 import 'package:stayverse/core/data/enum/enums.dart';
 import 'package:stayverse/core/data/server_error_catch.dart';
 import 'package:stayverse/core/data/typedefs.dart';
 import 'package:stayverse/core/exception/app_exceptions.dart';
-import 'package:stayverse/core/service/location/location_service.dart';
 import 'package:stayverse/core/util/app/logger.dart';
 import 'package:stayverse/feature/home/model/data/apartment_response.dart';
 import 'package:stayverse/feature/home/model/data/chef_response.dart';
@@ -89,10 +88,8 @@ class HomeController extends StateNotifier<HomeUiState>
     state = state.copyWith(isLoadingChefRecommendations: true);
 
     try {
-      final currenLocation = await LocationService.currentLocation();
-
       final serverResponse = await _homeNetworkService.getRecommendations(
-          ServiceType.chefs, currenLocation ?? Constant.defaultLocation);
+          ServiceType.chefs, const LatLng(0, 0));
 
       if (errorOccured(serverResponse, showToast: false)) {
         return;
@@ -113,9 +110,8 @@ class HomeController extends StateNotifier<HomeUiState>
     state = state.copyWith(isLoadingRideRecommendations: true);
 
     try {
-      final currenLocation = await LocationService.currentLocation();
       final serverResponse = await _homeNetworkService.getRecommendations(
-          ServiceType.rides, currenLocation ?? Constant.defaultLocation);
+          ServiceType.rides, const LatLng(0, 0));
 
       if (errorOccured(serverResponse, showToast: false)) {
         return;
@@ -136,10 +132,8 @@ class HomeController extends StateNotifier<HomeUiState>
     state = state.copyWith(isLoadingApartmentRecommendations: true);
 
     try {
-      final currenLocation = await LocationService.currentLocation();
-
       final serverResponse = await _homeNetworkService.getRecommendations(
-          ServiceType.apartment, currenLocation ?? Constant.defaultLocation);
+          ServiceType.apartment, const LatLng(0, 0));
 
       if (errorOccured(serverResponse, showToast: false)) {
         return;

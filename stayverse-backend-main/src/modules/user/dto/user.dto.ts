@@ -5,6 +5,7 @@ import parsePhoneNumberFromString from "libphonenumber-js";
 import { IsPhoneNumber } from "src/common/validators/phone-number.validator";
 import { Roles } from "src/common/constants/enum";
 import { IsEnum } from "class-validator";
+import { KycStatus } from "src/common/constants/enum";
 
 
 export class CreateUserDto {
@@ -125,4 +126,10 @@ export class DeleteAccountDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+}
+
+export class UpdateKycStatusDto {
+  @ApiProperty({ example: KycStatus.VERIFIED, enum: KycStatus })
+  @IsEnum(KycStatus)
+  kycStatus: KycStatus;
 }

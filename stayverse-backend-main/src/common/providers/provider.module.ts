@@ -15,10 +15,11 @@ import { DOUploadService } from "./digiital-ocean.service";
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
+        // Use implicit TLS only for SMTPS (port 465); STARTTLS/plain for others.
         transport: {
           host: configService.get<string>("mail.host"),
           port: configService.get<number>("mail.port"),
-          secure: true,
+          secure: configService.get<number>("mail.port") === 465,
           auth: {
             user: configService.get<string>("mail.user"),
             pass: configService.get<string>("mail.pass"),

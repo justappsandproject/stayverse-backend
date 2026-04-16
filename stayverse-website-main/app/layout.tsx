@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://stayverse-website-main.vercel.app"),
   title: "Stayverse | Book Apartments, Rides & Private Chefs Easily",
   description:
     "Discover your perfect stay, book reliable rides, and hire top-rated chefs — all in one platform. Stayverse connects you to seamless hospitality services with the best experiences.",
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
       "Explore Stayverse for hassle-free apartment bookings, convenient rides, and professional chef services. Your all-in-one hospitality solution.",
     url: "https://www.stayverse.com",
     type: "website",
+    images: ["/logo-white.png"],
   },
   twitter: {
     card: "summary_large_image",
@@ -31,6 +33,7 @@ export const metadata: Metadata = {
     title: "Stayverse | Book Apartments, Rides & Private Chefs Easily",
     description:
       "Stayverse makes booking apartments, rides, and chefs a breeze. Experience seamless hospitality services in one app.",
+    images: ["/logo-white.png"],
   },
   icons: {
     icon: "/icon.png",

@@ -5,6 +5,7 @@ import 'package:stayverse/core/data/enum/enums.dart';
 import 'package:stayverse/core/data/server_error_catch.dart';
 import 'package:stayverse/core/data/typedefs.dart';
 import 'package:stayverse/core/service/financial/money_service_v2.dart';
+import 'package:stayverse/core/util/location/location_privacy.dart';
 import 'package:stayverse/core/util/app/debouncer.dart';
 import 'package:stayverse/core/util/app/logger.dart';
 import 'package:stayverse/feature/home/model/data/apartment_response.dart';
@@ -140,7 +141,7 @@ class SearchFilterController extends StateNotifier<SearchUiState>
               decimalDigits: 0),
           imageUrl: apartment.apartmentImages?.firstOrNull,
           title: apartment.apartmentName,
-          location: apartment.address,
+          location: LocationPrivacy.extractArea(apartment.address),
           period: 'day',
           position: apartment.location?.latLng,
           searchResult: apartment);

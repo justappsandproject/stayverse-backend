@@ -4,12 +4,13 @@ export function Faqs() {
   return (
     <div
       id="faqs"
-      className="w-full flex flex-col gap-5 py-[70px] px-[22px] lg:py-[100px] lg:px-[100px] bg-gray-50 animate-fadeIn"
+      className="w-full px-5 sm:px-8 lg:px-[100px] py-10 lg:py-12 animate-fadeIn"
     >
-      <h1 className="text-[40px] lg:text-[58px] leading-[114px] font-bold animate-slideDown">
+      <div className="max-w-6xl mx-auto w-full bg-gray-50 border border-black/5 rounded-3xl p-6 sm:p-8 lg:p-10">
+      <h1 className="text-[30px] sm:text-[38px] lg:text-[48px] leading-tight font-bold animate-slideDown">
         Frequently Asked Questions
       </h1>
-      <div className="w-full grid gap-8">
+      <div className="w-full grid gap-6 mt-5">
         <AccordionListItem
           id="accordion-item-1"
           question="How do I make a booking on Stayverse?"
@@ -30,6 +31,7 @@ export function Faqs() {
           question="What payment methods are accepted on Stayverse?"
           answer="Stayverse accepts all major credit cards, debit cards, and digital wallets. We use secure encryption technology to keep your payment details safe. You'll see available payment options during checkout, making it easy to choose the method that works best for you."
         />
+      </div>
       </div>
     </div>
   );

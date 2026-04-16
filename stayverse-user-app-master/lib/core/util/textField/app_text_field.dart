@@ -93,7 +93,7 @@ class _AppTextFieldState extends State<AppTextField> {
                               ? Colors.black
                               : Colors.grey.shade500,
                           fontWeight: FontWeight.w500,
-                          height: 0,
+                          height: 1.2,
                         )),
                   ),
                   Gap(10.spaceScale)
@@ -103,7 +103,7 @@ class _AppTextFieldState extends State<AppTextField> {
         TextFormField(
           style: $styles.text.title1.copyWith(
               color: widget.enabled ? Colors.black : Colors.grey.shade500,
-              fontSize: 14.sp,
+              fontSize: 14,
               fontWeight: FontWeight.w600),
           controller: widget.controller,
           onChanged: widget.onChanged,
@@ -117,7 +117,7 @@ class _AppTextFieldState extends State<AppTextField> {
           enabled: widget.enabled,
           obscureText: widget.isPassword! ? _visible : false,
           readOnly: widget.onTap != null || widget.readOnly,
-          initialValue: widget.initialValue,
+          initialValue: widget.controller == null ? widget.initialValue : null,
           keyboardType: widget.textInputType,
           textInputAction: widget.textInputAction,
           inputFormatters: widget.inputFormatters,
@@ -126,7 +126,7 @@ class _AppTextFieldState extends State<AppTextField> {
               ? widget.minLines
               : widget.maxLines,
           decoration: InputDecoration(
-            constraints: BoxConstraints(maxHeight: 200.h, minHeight: 45.h),
+            constraints: BoxConstraints(maxHeight: 200.h, minHeight: 45),
             filled: true,
             prefixIcon: widget.prefixWidget == null
                 ? null
@@ -162,10 +162,10 @@ class _AppTextFieldState extends State<AppTextField> {
             ),
             hintStyle: $styles.text.bodySmall.copyWith(
               color: Colors.grey,
-              fontSize: 12.sp,
+              fontSize: 12,
             ),
             floatingLabelStyle: $styles.text.bodySmall
-                .copyWith(color: Colors.grey, fontSize: 14.sp),
+                .copyWith(color: Colors.grey, fontSize: 14),
             enabledBorder: enabledBorder,
             disabledBorder: disableBorder,
             focusedBorder: focusedBorder,

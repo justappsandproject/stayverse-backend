@@ -614,7 +614,7 @@ class ApartmentHostSection extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          'Apartment Host',
+          'Apartments',
           style: $styles.text.body.copyWith(
             fontWeight: FontWeight.w400,
             fontSize: 9.5,

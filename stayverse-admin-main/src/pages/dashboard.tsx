@@ -29,6 +29,7 @@ export default function Dashboard() {
     pageSize: 10,
   });
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [actionLoadingUserId, setActionLoadingUserId] = useState<string | null>(null);
 
   const defaultMetrics = [
     { title: "Total booking", value: "0" },
@@ -78,6 +79,44 @@ export default function Dashboard() {
         setLoading(false);
       });
   }, [pagination.pageIndex, pagination.pageSize, searchTerm, status]);
+
+  const handleApproveUser = async (userId: string) => {
+    setActionLoadingUserId(userId);
+    try {
+      await UserService.updateKycStatus(userId, "verified");
+      const response = await UserService.getAllUsers({
+        page: pagination.pageIndex + 1,
+        limit: pagination.pageSize,
+        searchTerm,
+        ...(status !== "all" && {
+          isEmailVerified: status === "verified" ? "true" : "false",
+        }),
+      });
+      setUsers(response.data);
+      setTotalPages(response.pagination.totalPages);
+    } finally {
+      setActionLoadingUserId(null);
+    }
+  };
+
+  const handleDeclineUser = async (userId: string) => {
+    setActionLoadingUserId(userId);
+    try {
+      await UserService.updateKycStatus(userId, "declined");
+      const response = await UserService.getAllUsers({
+        page: pagination.pageIndex + 1,
+        limit: pagination.pageSize,
+        searchTerm,
+        ...(status !== "all" && {
+          isEmailVerified: status === "verified" ? "true" : "false",
+        }),
+      });
+      setUsers(response.data);
+      setTotalPages(response.pagination.totalPages);
+    } finally {
+      setActionLoadingUserId(null);
+    }
+  };
 
   return (
     <div className="w-full ">
@@ -147,7 +186,13 @@ export default function Dashboard() {
               </span>
             </div>
 
-            <UserTable users={users} loading={loading} />
+            <UserTable
+              users={users}
+              loading={loading}
+              actionLoadingUserId={actionLoadingUserId}
+              onApproveUser={handleApproveUser}
+              onDeclineUser={handleDeclineUser}
+            />
 
             {users.length === 0 && !loading && (
               <div className="flex flex-col items-center justify-center py-20 bg-white border rounded-xl shadow-sm">

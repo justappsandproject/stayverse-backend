@@ -6,6 +6,7 @@ import 'package:stayverse/core/data/enum/enums.dart';
 import 'package:stayverse/core/extension/extension.dart';
 import 'package:stayverse/core/service/date_time_service.dart';
 import 'package:stayverse/core/service/financial/money_service_v2.dart';
+import 'package:stayverse/core/util/location/location_privacy.dart';
 import 'package:stayverse/core/util/image/app_assets.dart';
 import 'package:stayverse/feature/apartmentDetails/controller/aparment_details_controller.dart';
 import 'package:stayverse/feature/apartmentDetails/model/data/ameneties.dart';
@@ -18,7 +19,6 @@ import 'package:stayverse/feature/bookings/view/page/reviews_page.dart';
 import 'package:stayverse/feature/home/model/data/apartment_response.dart';
 import 'package:stayverse/feature/apartmentDetails/view/component/apartment_owner_profile.dart';
 import 'package:stayverse/feature/apartmentDetails/view/component/apartment_images.dart';
-import 'package:stayverse/feature/apartmentDetails/view/component/apartment_map_view.dart';
 import 'package:stayverse/feature/apartmentDetails/view/page/apartment_bookings_page.dart';
 import 'package:stayverse/shared/app_back_button.dart';
 import 'package:stayverse/shared/buttons.dart';
@@ -350,7 +350,8 @@ class _ApartmentDetailsPageState extends ConsumerState<ApartmentDetailsPage> {
                           const Gap(2),
                           Expanded(
                             child: Text(
-                              widget.apartment?.address ?? '--',
+                              LocationPrivacy.extractArea(
+                                  widget.apartment?.address),
                               maxLines: 3,
                               style: $styles.text.body.copyWith(
                                   fontWeight: FontWeight.w400,
@@ -362,30 +363,22 @@ class _ApartmentDetailsPageState extends ConsumerState<ApartmentDetailsPage> {
                       ),
                     ),
                     const Gap(10),
-                    widget.apartment?.location?.latLng != null
-                        ? Container(
-                            height: 150,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Stack(
-                                children: [
-                                  Positioned.fill(
-                                    child: ApartmentMapView(
-                                        latLng:
-                                            widget.apartment?.location?.latLng,
-                                        address:
-                                            widget.apartment?.address ?? ''),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'Exact address and map are shared after payment is completed.',
+                        style: $styles.text.body.copyWith(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                     const Gap(20),
                     Text(
                       'Rules',

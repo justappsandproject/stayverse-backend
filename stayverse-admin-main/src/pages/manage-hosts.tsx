@@ -38,6 +38,7 @@ export default function ManageHosts() {
   const [totalInactive, setTotalInactive] = useState(0);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(false);
+  const [actionLoadingUserId, setActionLoadingUserId] = useState<string | null>(null);
   const [pagination, setPagination] = useState<{
     pageIndex: number;
     pageSize: number;
@@ -76,6 +77,26 @@ export default function ManageHosts() {
     fetchAgents();
   }, [fetchAgents]);
 
+  const handleApproveAgent = async (userId: string) => {
+    setActionLoadingUserId(userId);
+    try {
+      await AgentService.updateAgentKycStatus(userId, "verified");
+      fetchAgents();
+    } finally {
+      setActionLoadingUserId(null);
+    }
+  };
+
+  const handleDeclineAgent = async (userId: string) => {
+    setActionLoadingUserId(userId);
+    try {
+      await AgentService.updateAgentKycStatus(userId, "declined");
+      fetchAgents();
+    } finally {
+      setActionLoadingUserId(null);
+    }
+  };
+
   return (
     <section className="w-full px-10 py-10 lg:py-16 xl:py-20">
       <div className="start gap-7 mb-[18px]">
@@ -88,7 +109,7 @@ export default function ManageHosts() {
               : "text-dark border border-[#8A8A8A]"
           )}
         >
-          Apartment Host
+          Apartments
         </button>
         <button
           onClick={() => setTab("car-host")}
@@ -99,7 +120,7 @@ export default function ManageHosts() {
               : "text-dark border border-[#8A8A8A]"
           )}
         >
-          Car Host
+          Rides
         </button>
       </div>
       <div className="w-fit grid grid-flow-col gap-8 mb-10 ">
@@ -268,10 +289,14 @@ export default function ManageHosts() {
                         <span
                           className={cn(
                             "capitalize font-medium px-2 py-1 rounded-full text-xs",
-                            agent.user?.kycStatus === "approved"
+                            agent.user?.kycStatus === "approved" ||
+                              agent.user?.kycStatus === "verified"
                               ? "bg-green-100 text-green-700"
                               : agent.user?.kycStatus === "pending"
                               ? "bg-yellow-100 text-yellow-700"
+                              : agent.user?.kycStatus === "declined" ||
+                                  agent.user?.kycStatus === "rejected"
+                                ? "bg-red-100 text-red-700"
                               : "bg-gray-100 text-gray-700"
                           )}
                         >
@@ -279,15 +304,33 @@ export default function ManageHosts() {
                         </span>
                       </TableCell>
                       <TableCell className="py-4 px-6 text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            navigate(`/hosts/${agent._id}/${agent.serviceType}`)
-                          }
-                        >
-                          View
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            disabled={actionLoadingUserId === agent.userId}
+                            onClick={() => handleApproveAgent(agent.userId)}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                            disabled={actionLoadingUserId === agent.userId}
+                            onClick={() => handleDeclineAgent(agent.userId)}
+                          >
+                            Decline
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              navigate(`/hosts/${agent._id}/${agent.serviceType}`)
+                            }
+                          >
+                            View
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

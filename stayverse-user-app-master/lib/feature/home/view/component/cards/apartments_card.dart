@@ -3,6 +3,7 @@ import 'package:stayverse/core/commonLibs/common_libs.dart';
 import 'package:stayverse/core/config/constant.dart';
 import 'package:stayverse/core/extension/extension.dart';
 import 'package:stayverse/core/service/financial/money_service_v2.dart';
+import 'package:stayverse/core/util/location/location_privacy.dart';
 import 'package:stayverse/feature/home/model/data/apartment_response.dart';
 import 'package:stayverse/shared/image_loading_progress.dart';
 
@@ -124,7 +125,7 @@ class ApartmentCard extends StatelessWidget {
                         const Gap(2),
                         Expanded(
                           child: Text(
-                            apartment?.address ?? 'Location not available',
+                            LocationPrivacy.extractArea(apartment?.address),
                             maxLines: 1,
                             style: TextStyle(
                               fontSize: 12,

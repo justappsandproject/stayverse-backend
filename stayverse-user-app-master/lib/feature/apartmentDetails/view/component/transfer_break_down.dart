@@ -56,7 +56,7 @@ class TransferBreakDown extends StatelessWidget {
             value: address ?? 'Not specified',
           ),
           DetailRow(
-            label: 'Apartment Host',
+            label: 'Apartments',
             value: hostName ?? 'Not specified',
           ),
           DetailRow(

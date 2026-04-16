@@ -46,7 +46,7 @@ class RideTransferBreakDown extends StatelessWidget {
             value: pickUpLocation ?? 'Not specified',
           ),
           DetailRow(
-            label: 'Ride Host',
+            label: 'Rides',
             value: hostName ?? 'Not specified',
           ),
           DetailRow(

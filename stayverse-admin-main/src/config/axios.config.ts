@@ -2,7 +2,7 @@ import axios from "axios";
 import useAuthStore from "@/stores/auth.store";
 import { toast } from "sonner";
 
-const BASE_URL_STAGING = import.meta.env.VITE_API_URL || 'https://api.stayversepro.com/';
+const BASE_URL_STAGING = import.meta.env.VITE_API_URL || 'https://stayverse-backend-lzlu.onrender.com/';
 
 export const API_URL = BASE_URL_STAGING;
 

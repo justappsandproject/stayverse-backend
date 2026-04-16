@@ -14,6 +14,9 @@ import { format } from "date-fns";
 interface UserTableProps {
   users: User[];
   loading?: boolean;
+  actionLoadingUserId?: string | null;
+  onApproveUser?: (userId: string) => void;
+  onDeclineUser?: (userId: string) => void;
 }
 
 const StatusBadge = ({
@@ -42,7 +45,13 @@ const StatusBadge = ({
   );
 };
 
-export function UserTable({ users, loading }: UserTableProps) {
+export function UserTable({
+  users,
+  loading,
+  actionLoadingUserId,
+  onApproveUser,
+  onDeclineUser,
+}: UserTableProps) {
   const { setOpen: openUserProfileModal } = useModalStore().userProfileModal;
 
   if (loading) {
@@ -130,11 +139,11 @@ export function UserTable({ users, loading }: UserTableProps) {
                 <StatusBadge
                   status={user.kycStatus || "Pending"}
                   variant={
-                    user.kycStatus === "approved"
+                    user.kycStatus === "approved" || user.kycStatus === "verified"
                       ? "success"
                       : user.kycStatus === "pending"
                         ? "warning"
-                        : user.kycStatus === "rejected"
+                        : user.kycStatus === "rejected" || user.kycStatus === "declined"
                           ? "error"
                           : "default"
                   }
@@ -146,15 +155,37 @@ export function UserTable({ users, loading }: UserTableProps) {
                   : "N/A"}
               </TableCell>
               <TableCell className="text-right py-3 px-5">
-                <button
-                  className="px-4 py-1.5 rounded-lg text-[13px] font-medium text-dark bg-primary-500 hover:bg-primary-600 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openUserProfileModal(true, { user });
-                  }}
-                >
-                  View
-                </button>
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-60"
+                    disabled={actionLoadingUserId === user._id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onApproveUser?.(user._id);
+                    }}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-60"
+                    disabled={actionLoadingUserId === user._id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeclineUser?.(user._id);
+                    }}
+                  >
+                    Decline
+                  </button>
+                  <button
+                    className="px-4 py-1.5 rounded-lg text-[13px] font-medium text-dark bg-primary-500 hover:bg-primary-600 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openUserProfileModal(true, { user });
+                    }}
+                  >
+                    View
+                  </button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

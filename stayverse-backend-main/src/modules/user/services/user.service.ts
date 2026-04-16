@@ -155,6 +155,21 @@ export class UserService {
     );
   }
 
+  async adminUpdateKycStatus(userId: string, kycStatus: KycStatus) {
+    const user = await this.userModel.findById(toObjectId(userId));
+    if (!user) throw new BadRequestException('User not found');
+
+    if (![Roles.USER, Roles.AGENT].includes(user.role)) {
+      throw new BadRequestException('KYC status can only be updated for users or agents');
+    }
+
+    user.kycStatus = kycStatus;
+    await user.save();
+
+    const { passwordHash, otp, pinExpires, ...userObj } = user.toObject();
+    return { message: 'KYC status updated successfully', user: userObj };
+  }
+
   async updateProfile(userId: string, dto: UpdateUserDto) {
     const user = await this.userModel.findById(userId);
     if (!user) throw new BadRequestException('User not found');

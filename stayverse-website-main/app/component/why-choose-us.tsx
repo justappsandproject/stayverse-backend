@@ -3,11 +3,12 @@ import Image from "next/image";
 
 export function WhyChooseUs() {
   return (
-    <div className="w-full bg-white flex flex-col gap-[60px] px-[20px] lg:px-[100px] pt-[78px] pb-[90px]">
-      <h1 className="text-[40px] lg:text-[60px] leading-[115px] font-bold text-center animate-fadeIn">
+    <section className="w-full px-5 sm:px-8 lg:px-[100px] py-12 lg:py-14">
+      <div className="max-w-6xl mx-auto bg-white rounded-3xl border border-black/5 shadow-[0_10px_35px_rgba(0,0,0,0.05)] p-6 sm:p-8 lg:p-10 flex flex-col gap-10">
+      <h1 className="text-[30px] sm:text-[38px] lg:text-[48px] leading-tight font-bold text-center animate-fadeIn">
         Why Choose Us?
       </h1>
-      <div className="w-full flex max-md:flex-col max-md:justify-center justify-between items-center max-md:gap-10 gap-20">
+      <div className="w-full flex max-md:flex-col max-md:justify-center justify-between items-center max-md:gap-10 gap-10 lg:gap-14">
         <div className="w-full md:w-[50%] flex flex-col gap-[55px] lg:gap-[60px]">
           <div className="flex items-center gap-4 animate-slideInLeft animation-delay-200">
             <span className="w-[45px] aspect-square bg-primary-500 rounded-full shrink-0 flex justify-center items-center gap-2 transform hover:rotate-12 transition-transform duration-300">
@@ -18,7 +19,7 @@ export function WhyChooseUs() {
                 alt="house fill icon"
               />
             </span>
-            <p className="text-base leading-8">
+            <p className="text-base leading-7">
               <span className="font-medium">Handpicked Apartments</span>
               <br />
               <span className="font-normal">
@@ -35,7 +36,7 @@ export function WhyChooseUs() {
                 alt="chef hat icon"
               />
             </span>
-            <p className="text-base leading-8">
+            <p className="text-base leading-7">
               <span className="font-medium">Personal Chefs On-Demand</span>
               <br />
               <span className="font-normal">
@@ -52,7 +53,7 @@ export function WhyChooseUs() {
                 alt="car icon"
               />
             </span>
-            <p className="text-base leading-8">
+            <p className="text-base leading-7">
               <span className="font-medium">Reliable Rides</span>
               <br />
               <span className="font-normal">
@@ -95,6 +96,7 @@ export function WhyChooseUs() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </section>
   );
 }

@@ -6,8 +6,7 @@ import 'package:stayverse/core/data/typedefs.dart';
 import 'package:stayverse/core/util/app/logger.dart';
 
 class _HomePath {
-  static String recommendations(ServiceType type) =>
-      "/${type.apiPoint}/recommended";
+  static String listings(ServiceType type) => "/${type.apiPoint}";
 
   static const String topLocations = "/user/top-locations";
   static const String topChefs = "/user/top-chefs";
@@ -25,11 +24,7 @@ class HomeNetworkRepository {
   Future<ServerResponse?> getRecommendations(
       ServiceType serviceType, LatLng latLng) async {
     final result = await dio.get<DynamicMap>(
-      "${dio.options.baseUrl}${_HomePath.recommendations(serviceType)}",
-      queryParameters: {
-        "lng": latLng.longitude,
-        "lat": latLng.latitude,
-      },
+      "${dio.options.baseUrl}${_HomePath.listings(serviceType)}",
     );
 
     return result.data == null ? null : ServerResponse.fromJson(result.data!);

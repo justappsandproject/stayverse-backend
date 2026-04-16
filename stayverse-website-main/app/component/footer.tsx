@@ -1,12 +1,14 @@
 import Image from "next/image";
 
 export function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="w-full flex flex-col gap-5 py-[70px] px-[22px] lg:py-[100px] lg:px-[100px] animate-fadeIn">
-      <div className="flex justify-between items-center flex-wrap gap-5">
-        <div className="flex items-center gap-[25px]">
+    <footer className="w-full flex flex-col gap-6 py-14 px-5 sm:px-8 lg:py-20 lg:px-[100px] animate-fadeIn bg-white/70 backdrop-blur-sm border-t border-black/5">
+      <div className="flex justify-between items-center flex-wrap gap-6">
+        <div className="flex items-center gap-5 sm:gap-[25px]">
           <a
-            href="https://x.com/stayversepro?s=21"
+            href="https://www.facebook.com/stayversepro"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -45,7 +47,7 @@ export function Footer() {
             />
           </a>
           <a
-            href="https://x.com/stayversepro?s=21"
+            href="https://www.linkedin.com/company/stayverse"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -58,17 +60,17 @@ export function Footer() {
             />
           </a>
         </div>
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <span className="text-base text-black">
-            All Rights Reserved 2025 | Stayverse. Ltd
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+          <span className="text-sm sm:text-base text-black text-center lg:text-left">
+            All Rights Reserved {currentYear} | Stayverse Ltd
           </span>
 
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center justify-center lg:justify-start flex-wrap gap-3 sm:gap-4 text-sm text-gray-600">
             <a
               href="/terms"
               className="hover:text-primary-500 hover:underline transition-colors"
             >
-              Terms and Condition
+              Terms & Conditions
             </a>
             <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
             <a

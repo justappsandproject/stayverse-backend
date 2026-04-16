@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:stayverse/app.dart';
 import 'package:stayverse/core/brimEngine/bootLoaders/brim_boot.dart';
 import 'package:stayverse/core/brimEngine/brim_engine.dart';
@@ -29,7 +31,8 @@ Future main() async {
     case Environment.dev:
       Logger.level = Level.all;
 
-      Constant.host = Env.hostDev;
+      Constant.host =
+          _devApiBaseUrl(Env.hostDev, deviceInformation);
 
       reporterClient = SenrtyClientReporter(
         SentryClient(SentryOptions(dsn: Env.sentryDns)),
@@ -75,4 +78,18 @@ Future main() async {
       ),
     ),
   );
+}
+
+/// Physical Android devices cannot use the emulator-only host `10.0.2.2`.
+/// When `.env` still points there, rewrite to `127.0.0.1` so
+/// `adb reverse tcp:<port> tcp:<port>` forwards to your machine.
+String _devApiBaseUrl(String configured, DeviceInformation device) {
+  if (!Platform.isAndroid || !device.isPhysicalDevice) return configured;
+  final uri = Uri.tryParse(configured);
+  if (uri == null || uri.host != '10.0.2.2') return configured;
+  return Uri(
+    scheme: uri.scheme.isEmpty ? 'http' : uri.scheme,
+    host: '127.0.0.1',
+    port: uri.hasPort ? uri.port : null,
+  ).toString();
 }

@@ -2,11 +2,16 @@
 // supabaseService.js
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+function getSupabaseClient() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+    if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase configuration is missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+    }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+    return createClient(supabaseUrl, supabaseKey);
+}
 
 
 interface WaitlistEntry {
@@ -22,6 +27,7 @@ class SupabaseService {
     static async addToWaitlist(email: string): Promise<WaitlistEntry> {
         if (!email) throw new Error('Email is required');
         const sanitizedEmail = email.trim();
+        const supabase = getSupabaseClient();
 
         try {
             const {  error } = await supabase
@@ -45,6 +51,7 @@ class SupabaseService {
         if (!email || !message) throw new Error('Email and message is required');
 
         const sanitizedEmail = email.trim();
+        const supabase = getSupabaseClient();
 
         try {
             const { error } = await supabase

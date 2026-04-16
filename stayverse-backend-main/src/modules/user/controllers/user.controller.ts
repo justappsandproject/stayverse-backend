@@ -31,6 +31,7 @@ import {
   DeleteAccountDto,
   ForgotPasswordResetDto,
   LoginUserDto,
+  UpdateKycStatusDto,
   UpdateDeviceTokenAndNotificationDto,
   UpdatePasswordDto,
   UpdateProfilePicture,
@@ -305,6 +306,18 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Account deleted successfully' })
   async deleteUser(@Param('id') userId: string) {
     return await this.usersService.softDeleteAccount(userId);
+  }
+
+  @Patch(':id/kyc-status')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.ADMIN)
+  @ApiOperation({ summary: 'Admin update user or agent KYC status' })
+  @ApiParam({ name: 'id', description: 'User ID (for user or agent profile owner)' })
+  async updateKycStatus(
+    @Param('id') userId: string,
+    @Body() dto: UpdateKycStatusDto,
+  ) {
+    return await this.usersService.adminUpdateKycStatus(userId, dto.kycStatus);
   }
 
 

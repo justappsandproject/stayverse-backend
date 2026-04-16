@@ -11,6 +11,7 @@ export default () => ({
     user: process.env.MAIL_USER || "your_mailtrap_user",
     pass: process.env.MAIL_PASS || "your_mailtrap_pass",
     from: process.env.MAIL_FROM || "no-reply@example.com",
+    timeoutMs: parseInt(process.env.MAIL_TIMEOUT_MS, 10) || 7000,
   },
 
   database: {

@@ -52,7 +52,7 @@ class WithdrawRefundPage extends ConsumerWidget {
                     BuildDetailRow(
                         label: 'Location',
                         value: '7 Bayview street, Lekki Phase 1'),
-                    BuildDetailRow(label: 'Apartment Host', value: 'Sensei'),
+                    BuildDetailRow(label: 'Apartments', value: 'Sensei'),
                   ],
                 ),
               ).paddingOnly(left: 22, right: 19),

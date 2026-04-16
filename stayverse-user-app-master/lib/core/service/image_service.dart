@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_gallery_saver/image_gallery_saver.dart';
@@ -71,24 +74,27 @@ class ImageService {
       BrimToast.showError('Download failed: $e');
     }
   }
-   static Future<List<MultipartFile>> convertMutipleImagetoMultipart(
+  static Future<List<MultipartFile>> convertMutipleImagetoMultipart(
       String filePath,
       {String? fileName}) async {
     final multipartFiles = <MultipartFile>[];
 
-    String fileExtension = filePath.split('.').last.toLowerCase();
+    final preparedFilePath = await _prepareImageForUpload(filePath);
+    final fileExtension = preparedFilePath.split('.').last.toLowerCase();
 
     const mimeTypes = {
       'jpg': 'jpeg',
       'jpeg': 'jpeg',
       'png': 'png',
       'webp': 'webp',
+      'heic': 'jpeg',
+      'heif': 'jpeg',
     };
 
     final mimeSubType = mimeTypes[fileExtension] ?? 'jpeg';
 
     final multipartFile = await MultipartFile.fromFile(
-      filePath,
+      preparedFilePath,
       contentType: DioMediaType('image', mimeSubType),
       filename:
           '${fileName ?? 'photo'}_${DateTime.now().millisecondsSinceEpoch}.$fileExtension',
@@ -100,24 +106,53 @@ class ImageService {
 
   static Future<MultipartFile> convertImagetoMultipart(String filePath,
       {String? fileName}) async {
-    String fileExtension = filePath.split('.').last.toLowerCase();
+    final preparedFilePath = await _prepareImageForUpload(filePath);
+    final fileExtension = preparedFilePath.split('.').last.toLowerCase();
 
     const mimeTypes = {
       'jpg': 'jpeg',
       'jpeg': 'jpeg',
       'png': 'png',
       'webp': 'webp',
+      'heic': 'jpeg',
+      'heif': 'jpeg',
     };
 
     final mimeSubType = mimeTypes[fileExtension] ?? 'jpeg';
 
     final multipartFile = await MultipartFile.fromFile(
-      filePath,
+      preparedFilePath,
       contentType: DioMediaType('image', mimeSubType),
       filename:
           '${fileName ?? 'photo'}_${DateTime.now().millisecondsSinceEpoch}.$fileExtension',
     );
 
     return multipartFile;
+  }
+
+  static Future<String> _prepareImageForUpload(String filePath) async {
+    try {
+      final sourceFile = File(filePath);
+      if (!sourceFile.existsSync()) return filePath;
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final targetPath = filePath.replaceAllMapped(
+        RegExp(r'\.[^.]+$'),
+        (_) => '_optimized_$timestamp.jpg',
+      );
+
+      final compressedFile = await FlutterImageCompress.compressAndGetFile(
+        sourceFile.absolute.path,
+        targetPath,
+        quality: 80,
+        minWidth: 1440,
+        minHeight: 1440,
+        format: CompressFormat.jpeg,
+      );
+
+      return compressedFile?.path ?? filePath;
+    } catch (_) {
+      return filePath;
+    }
   }
 }

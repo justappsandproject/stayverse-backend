@@ -69,23 +69,41 @@ class CurrentUser {
   }
 
   factory CurrentUser.fromJson(Map<String, dynamic> json) {
-    String? roleValue = json['role'] ?? json['roles'];
+    final roleRaw = json['role'] ?? json['roles'];
+    final parsedRole = Roles.tryParse(roleRaw);
 
     return CurrentUser(
-      id: json['_id'],
-      firstname: json['firstname'],
-      lastname: json['lastname'],
-      notificationsEnabled: json['notificationsEnabled'],
-      email: json['email'],
-      phoneNumber: json['phoneNumber'],
-      isEmailVerified: json['isEmailVerified'],
-      profilePicture: json['profilePicture'],
+      id: _parseId(json['_id'] ?? json['id']),
+      firstname: json['firstname']?.toString(),
+      lastname: json['lastname']?.toString(),
+      notificationsEnabled: _readBool(json['notificationsEnabled']),
+      email: json['email']?.toString(),
+      phoneNumber: json['phoneNumber']?.toString(),
+      isEmailVerified: _readBool(json['isEmailVerified']) ?? false,
+      profilePicture: json['profilePicture']?.toString(),
       balance: json["balance"]?.toString().toDoubleOrNull(),
-      kycStatus: KycVerificationStatus.fromName(json["kycStatus"]),
-      roles: roleValue != null
-          ? Roles.values.byName(roleValue)
-          : Roles.user, 
+      kycStatus: KycVerificationStatus.fromName(json["kycStatus"]?.toString()),
+      roles: parsedRole ?? Roles.user,
     );
+  }
+
+  static String? _parseId(dynamic value) {
+    if (value == null) return null;
+    if (value is Map) {
+      final oid = value[r'$oid'];
+      if (oid != null) return oid.toString();
+    }
+    return value.toString();
+  }
+
+  static bool? _readBool(dynamic v) {
+    if (v == null) return null;
+    if (v is bool) return v;
+    if (v is num) return v != 0;
+    final s = v.toString().trim().toLowerCase();
+    if (s == 'true') return true;
+    if (s == 'false') return false;
+    return null;
   }
 
   Map<String, dynamic> toJson() {

@@ -7,7 +7,6 @@ import 'package:stayverse/core/config/dependecies.dart';
 import 'package:stayverse/core/config/evn/env.dart';
 import 'package:stayverse/core/data/enum/enums.dart';
 import 'package:stayverse/core/data/server_error_catch.dart';
-import 'package:stayverse/core/data/typedefs.dart';
 import 'package:stayverse/core/event/brim_resgister.dart';
 import 'package:stayverse/core/event/evenList/route_history_event.dart';
 import 'package:stayverse/core/exception/app_exceptions.dart';
@@ -31,17 +30,30 @@ class LoginController extends StateNotifier<LoginUiState>
         return LoginRoute.failed;
       }
 
-      final data = LoginResponse.fromJson(serverResposne?.data as DynamicMap);
+      final payload = serverResposne?.data;
+      if (payload is! Map) {
+        BrimToast.showError('Invalid response from server.');
+        return LoginRoute.failed;
+      }
+
+      final data = LoginResponse.fromJson(Map<String, dynamic>.from(payload));
 
       if (data.isEmailVerified != true) {
         BrimToast.showSuccess('Please verify your email');
         return LoginRoute.emailNotVerified;
       }
+
+      final token = data.accessToken?.trim();
+      if (token == null || token.isEmpty || data.user == null) {
+        BrimToast.showError('Login incomplete. Please try again.');
+        return LoginRoute.failed;
+      }
+
       await eventOn<RouteHistoryEvent>(
           params: {Env.screenStorageScreen: DashbBoardScreenPage.route});
 
-      await BrimAuth.login(data.user?.toJson(),
-          token: data.accessToken,
+      await BrimAuth.login(data.user!.toJson(),
+          token: token,
           customTokens: {
             Env.chatToken: data.chatToken ?? '',
           });
@@ -49,6 +61,9 @@ class LoginController extends StateNotifier<LoginUiState>
       return LoginRoute.success;
     } on BrimAppException catch (e) {
       BrimToast.showError(e.toString());
+      return LoginRoute.failed;
+    } catch (_) {
+      BrimToast.showError('Login failed. Please try again.');
       return LoginRoute.failed;
     } finally {
       reset();

@@ -63,5 +63,18 @@ export const AgentService = {
         } catch {
             toast.error('Failed to update ride status');
         }
+    },
+    updateAgentKycStatus: async (userId: string, kycStatus: "verified" | "declined") => {
+        try {
+            const { data, status } = await axiosInstance.patch(`/users/${userId}/kyc-status`, { kycStatus });
+            if (status === 200) {
+                toast.success(`Agent ${kycStatus === "verified" ? "approved" : "declined"} successfully.`);
+                return data?.data;
+            }
+            toast.warning(data?.message || 'Unable to update agent KYC status.');
+        } catch {
+            toast.error('Failed to update agent KYC status');
+        }
+        return null;
     }
 }

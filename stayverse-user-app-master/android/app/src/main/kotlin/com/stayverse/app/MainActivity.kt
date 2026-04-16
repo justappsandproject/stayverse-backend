@@ -1,4 +1,4 @@
-package com.stayversepro.app
+package com.stayverse.app
 
 import io.flutter.embedding.android.FlutterActivity
 

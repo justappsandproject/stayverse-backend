@@ -1,51 +1,57 @@
 
 import Image from "next/image";
+import Link from "next/link";
 export function HowItWork(){
     return (
         <div
         id="how-it-works"
-        className="w-full min-h-[80dvh] flex py-[70px] lg:py-[100px] lg:px-[100px] gap-[100px] animate-fadeIn"
+        className="w-full flex py-10 lg:py-12 px-5 sm:px-8 lg:px-[100px] animate-fadeIn"
       >
-        <div className="w-full flex max-lg:flex-col gap-5 bg-[#2C2C2C] lg:rounded-[26px]">
-          <div className="w-full lg:w-[50%] flex flex-col gap-8 text-white px-[20px] lg:px-[80px] py-[55px]">
-            <h1 className="text-[40px] lg:text-[60px] leading-[115px] font-bold animate-slideDown">
+        <div className="w-full max-w-6xl mx-auto flex max-lg:flex-col gap-4 bg-[#2C2C2C] rounded-3xl border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.22)]">
+          <div className="w-full lg:w-[50%] flex flex-col gap-6 text-white px-6 sm:px-8 lg:px-12 py-8 sm:py-10">
+            <h1 className="text-[32px] sm:text-[40px] lg:text-[48px] leading-tight font-bold animate-slideDown">
               How it works
             </h1>
-            <div className="w-full ml-4 border-l border-l-primary-500 pl-4 space-y-4">
+            <div className="w-full ml-4 border-l border-l-primary-500 pl-4 space-y-5">
               <div className="relative animate-slideInLeft animation-delay-200">
                 <div className="w-4 h-4 rounded-full bg-primary-500 absolute -left-[24px] animate-pulse"></div>
-                <p className="text-base leading-8">
-                  <span className="font-medium">Book an Apartment</span>
+                <p className="text-base leading-7">
+                  <span className="font-medium">1. Pick your service in under 1 minute</span>
                   <br />
                   <span className="font-normal">
-                    Browse and reserve your perfect stay.
+                    Choose apartment stays, private chef bookings, or a ride based on your schedule.
                   </span>
                 </p>
               </div>
               <div className="relative animate-slideInLeft animation-delay-400">
                 <div className="w-4 h-4 rounded-full bg-primary-500 absolute -left-[24px] animate-pulse"></div>
-                <p className="text-base leading-8">
-                  <span className="font-medium">Hire a Chef</span>
+                <p className="text-base leading-7">
+                  <span className="font-medium">2. Compare verified options in 2-3 minutes</span>
                   <br />
                   <span className="font-normal">
-                    Choose a chef to cook meals tailored to your taste.
+                    Review ratings, pricing, and availability from trusted providers.
                   </span>
                 </p>
               </div>
               <div className="relative animate-slideInLeft animation-delay-600">
                 <div className="w-4 h-4 rounded-full bg-primary-500 absolute -left-[24px] animate-pulse"></div>
-                <p className="text-base leading-8">
-                  <span className="font-medium">Rent a Ride</span>
+                <p className="text-base leading-7">
+                  <span className="font-medium">3. Confirm and you're set in under 5 minutes</span>
                   <br />
                   <span className="font-normal">
-                    Get a car with a driver, whenever you need.
+                    Book securely and get instant confirmation details for your trip.
                   </span>
                 </p>
               </div>
             </div>
-            <button className="w-[164px] bg-primary-500 rounded-[50px] py-[10px] px-[10px] text-base font-medium text-[#2C2C2C] hover:bg-primary-600 transform hover:scale-105 transition-all duration-300 animate-fadeIn">
+            <Link
+              href="https://onelink.to/zvdpw6?utm_source=website&utm_medium=how_it_works&utm_campaign=download"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-[164px] text-center bg-primary-500 rounded-[50px] py-[10px] px-[10px] text-base font-medium text-[#2C2C2C] hover:bg-primary-600 transform hover:scale-105 transition-all duration-300 animate-fadeIn"
+            >
               Book Now
-            </button>
+            </Link>
           </div>
 
           <div className="w-full lg:w-[50%] h-full max-lg:min-h-[60dvh] relative animate-fadeInRight">

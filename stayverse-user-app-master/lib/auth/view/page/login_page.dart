@@ -1,7 +1,7 @@
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stayverse/auth/controller/login_controller.dart';
+import 'package:stayverse/core/config/dev_test_login.dart';
 import 'package:stayverse/auth/model/data/login_request.dart';
 import 'package:stayverse/auth/model/data/verify_code_data.dart';
 import 'package:stayverse/auth/view/page/forgot_password.dart';
@@ -30,6 +30,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (kDevTestLoginEnabled) {
+      _emailController.text = DevTestUserCredentials.email;
+      _passwordController.text = DevTestUserCredentials.password;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _loginWithCredentials(
+          DevTestUserCredentials.email,
+          DevTestUserCredentials.password,
+        );
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -89,6 +105,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 isPassword: true,
               ),
               const Gap(20),
+              if (kDevTestLoginEnabled) ...[
+                Text(
+                  'Dev: demo user credentials (auto-login)',
+                  style: $styles.text.bodySmall.copyWith(
+                    fontSize: 12,
+                    color: Colors.orange.shade800,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Gap(8),
+              ],
               InkWell(
                 onTap: () => $navigate.to(ForgotPasswordPage.route),
                 child: Text(
@@ -231,33 +258,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
-      final loginRequest = LoginRequest(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      await _loginWithCredentials(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
+    }
+  }
 
-      if (!mounted) return;
+  Future<void> _loginWithCredentials(String email, String password) async {
+    final loginRequest = LoginRequest(email: email, password: password);
 
-      final proceed =
-          await ref.read(loginController.notifier).login(loginRequest);
+    if (!mounted) return;
 
-      if (!mounted) return;
+    final proceed =
+        await ref.read(loginController.notifier).login(loginRequest);
 
-      switch (proceed) {
-        case LoginRoute.emailNotVerified:
-          $navigate.toWithParameters(VerifyCodePage.route,
-              args: VerificationCodeData(
-                email: _emailController.text.trim(),
-                password: _passwordController.text.trim(),
-              ));
-          break;
-        case LoginRoute.success:
-          $navigate.clearAllTo(DashbBoardScreenPage.route);
-          break;
-        case LoginRoute.failed:
-          break;
-      }
+    if (!mounted) return;
+
+    switch (proceed) {
+      case LoginRoute.emailNotVerified:
+        $navigate.toWithParameters(VerifyCodePage.route,
+            args: VerificationCodeData(
+              email: email,
+              password: password,
+            ));
+        break;
+      case LoginRoute.success:
+        $navigate.clearAllTo(DashbBoardScreenPage.route);
+        break;
+      case LoginRoute.failed:
+        break;
     }
   }
 }

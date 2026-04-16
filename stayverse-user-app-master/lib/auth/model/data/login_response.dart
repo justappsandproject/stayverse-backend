@@ -20,11 +20,30 @@ class LoginResponse {
           user: user ?? this.user,
           chatToken: chatToken ?? this.chatToken);
 
-  factory LoginResponse.fromJson(Map<String, dynamic> json) => LoginResponse(
-      accessToken: json["access_token"],
-      isEmailVerified: json["isEmailVerified"],
-      user: json["user"] == null ? null : CurrentUser.fromJson(json["user"]),
-      chatToken: json['chatToken']);
+  factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    final rawUser = json["user"];
+    CurrentUser? user;
+    if (rawUser is Map) {
+      user = CurrentUser.fromJson(Map<String, dynamic>.from(rawUser));
+    }
+
+    return LoginResponse(
+      accessToken: json["access_token"]?.toString(),
+      isEmailVerified: _readBool(json["isEmailVerified"]),
+      user: user,
+      chatToken: json['chatToken']?.toString(),
+    );
+  }
+
+  static bool? _readBool(dynamic v) {
+    if (v == null) return null;
+    if (v is bool) return v;
+    if (v is num) return v != 0;
+    final s = v.toString().trim().toLowerCase();
+    if (s == 'true') return true;
+    if (s == 'false') return false;
+    return null;
+  }
 
   Map<String, dynamic> toJson() => {
         "access_token": accessToken,

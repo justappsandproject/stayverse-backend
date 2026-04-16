@@ -3,7 +3,6 @@ import 'package:stayverse/core/config/dependecies.dart';
 import 'package:stayverse/core/data/current_user.dart';
 import 'package:stayverse/core/data/server_error_catch.dart';
 import 'package:stayverse/core/data/server_respond.dart';
-import 'package:stayverse/core/data/typedefs.dart';
 import 'package:stayverse/core/exception/app_exceptions.dart';
 import 'package:stayverse/core/service/brimAuth/brim_auth.dart';
 import 'package:stayverse/core/service/toast_service.dart';
@@ -33,11 +32,13 @@ class DashBoardController extends StateNotifier<DashBoardUiState>
         return null;
       }
 
-      final currentUser =
-          CurrentUser.fromJson(serverResponse?.data as DynamicMap);
+      final raw = serverResponse?.data;
+      if (raw is! Map) return null;
 
-      return currentUser;
+      return CurrentUser.fromJson(Map<String, dynamic>.from(raw));
     } on BrimAppException catch (_) {
+      return null;
+    } catch (_) {
       return null;
     } finally {
       reset();

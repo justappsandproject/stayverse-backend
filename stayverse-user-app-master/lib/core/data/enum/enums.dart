@@ -9,7 +9,18 @@ enum LoginRoute {
 
 enum Roles {
   user,
-  admin,
+  admin;
+
+  /// API sends lowercase role strings (`user`, `admin`, `agent`). Never throws.
+  static Roles? tryParse(dynamic value) {
+    if (value == null) return null;
+    if (value is List && value.isNotEmpty) {
+      return tryParse(value.first);
+    }
+    final s = value.toString().trim().toLowerCase();
+    if (s.isEmpty) return null;
+    return Roles.values.firstOrNullWhere((e) => e.name.toLowerCase() == s);
+  }
 }
 
 enum ServiceType {
@@ -111,8 +122,10 @@ enum KycVerificationStatus {
 
   static KycVerificationStatus? fromName(String? name) {
     if (name == null) return null;
+    final n = name.trim().toLowerCase();
+    if (n == 'verified') return KycVerificationStatus.approved;
     return KycVerificationStatus.values
-        .firstOrNullWhere((e) => e.name.toLowerCase() == name);
+        .firstOrNullWhere((e) => e.name.toLowerCase() == n);
   }
 }
 

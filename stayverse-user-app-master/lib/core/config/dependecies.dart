@@ -111,9 +111,9 @@ Dio dioConfig() {
     ..interceptors.add(locator<BearerTokenInterceptor>())
     ..interceptors.add(locator<UserAgentInterceptor>())
     ..options.baseUrl = Constant.host
-    ..options.receiveTimeout = const Duration(seconds: 20)
-    ..options.connectTimeout = const Duration(seconds: 20)
-    ..options.sendTimeout = const Duration(seconds: 20);
+    ..options.receiveTimeout = const Duration(seconds: 60)
+    ..options.connectTimeout = const Duration(seconds: 60)
+    ..options.sendTimeout = const Duration(seconds: 60);
 
   return dio;
 }

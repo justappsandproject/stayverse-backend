@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stayvers_agent/auth/controller/login_controller.dart';
+import 'package:stayvers_agent/core/config/dev_test_login.dart';
 import 'package:stayvers_agent/auth/model/data/login_request.dart';
 import 'package:stayvers_agent/auth/model/data/verify_code_data.dart';
 import 'package:stayvers_agent/auth/view/page/verify_otp_page.dart';
@@ -33,6 +35,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (kDevTestLoginEnabled && kDevTestAgentAccounts.isNotEmpty) {
+      final a = kDevTestAgentAccounts.first;
+      _emailController.text = a.email;
+      _passwordController.text = a.password;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _loginWithCredentials(a.email, a.password);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -92,6 +108,40 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 textInputType: TextInputType.visiblePassword,
                 isPassword: true,
               ),
+              if (kDevTestLoginEnabled) ...[
+                const Gap(12),
+                Text(
+                  'Dev: demo agents (Chef auto-login; tap to switch)',
+                  style: $styles.text.bodySmall.copyWith(
+                    fontSize: 12,
+                    color: Colors.orange.shade800,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Gap(8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final a in kDevTestAgentAccounts)
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          foregroundColor: AppColors.black,
+                          side: const BorderSide(color: Colors.black26),
+                        ),
+                        onPressed: () {
+                          _emailController.text = a.email;
+                          _passwordController.text = a.password;
+                          setState(() {});
+                          _loginWithCredentials(a.email, a.password);
+                        },
+                        child: Text(a.label),
+                      ),
+                  ],
+                ),
+              ],
               const Gap(15),
               InkWell(
                 onTap: () => $navigate.to(ForgotPasswordPage.route),
@@ -226,33 +276,37 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
-      final loginRequest = LoginRequest(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
       closKeyPad(context);
-      if (!mounted) return;
+      await _loginWithCredentials(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+    }
+  }
 
-      final proceed =
-          await ref.read(loginController.notifier).login(loginRequest);
+  Future<void> _loginWithCredentials(String email, String password) async {
+    final loginRequest = LoginRequest(email: email, password: password);
+    closKeyPad(context);
+    if (!mounted) return;
 
-      if (!mounted) return;
+    final proceed =
+        await ref.read(loginController.notifier).login(loginRequest);
 
-      switch (proceed) {
-        case LoginRoute.emailNotVerified:
-          $navigate.toWithParameters(VerifyCodePage.route,
-              args: VerificationCodeData(
-                email: _emailController.text.trim(),
-                password: _passwordController.text.trim(),
-              ));
-          break;
-        case LoginRoute.success:
-          $navigate.clearAllTo(DashBoardPage.route);
-          break;
-        case LoginRoute.failed:
-          break;
-      }
+    if (!mounted) return;
+
+    switch (proceed) {
+      case LoginRoute.emailNotVerified:
+        $navigate.toWithParameters(VerifyCodePage.route,
+            args: VerificationCodeData(
+              email: email,
+              password: password,
+            ));
+        break;
+      case LoginRoute.success:
+        $navigate.clearAllTo(DashBoardPage.route);
+        break;
+      case LoginRoute.failed:
+        break;
     }
   }
 }
