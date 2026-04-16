@@ -32,6 +32,7 @@ import 'package:stayverse/feature/home/model/data/apartment_response.dart';
 import 'package:stayverse/feature/home/model/data/chef_response.dart';
 import 'package:stayverse/feature/home/model/data/ride_response.dart';
 import 'package:stayverse/feature/inbox/view/page/chat_support_page.dart';
+import 'package:stayverse/feature/inbox/view/page/inbox_page.dart';
 import 'package:stayverse/feature/messaging/view/chats.dart';
 import 'package:stayverse/feature/profile/view/page/change_password_page.dart';
 import 'package:stayverse/feature/profile/view/page/delete_account_page.dart';
@@ -176,6 +177,11 @@ class RouteGenerator {
 
       case ChatSupportPage.route:
         final page = ChatSupportPage(url: args as String);
+        return CustomMaterialPageRoute(
+            settings: RouteSettings(name: settings.name), builder: (_) => page);
+
+      case InboxPage.route:
+        const page = InboxPage();
         return CustomMaterialPageRoute(
             settings: RouteSettings(name: settings.name), builder: (_) => page);
 

@@ -9,6 +9,7 @@ import 'package:stayverse/core/extension/extension.dart';
 import 'package:stayverse/core/util/app/helper.dart';
 import 'package:stayverse/feature/dashboard/controller/dashboard_controller.dart';
 import 'package:stayverse/feature/inbox/view/page/chat_support_page.dart';
+import 'package:stayverse/feature/inbox/view/page/inbox_page.dart';
 import 'package:stayverse/feature/profile/controller/profile_controller.dart';
 import 'package:stayverse/feature/profile/view/component/delete_account_dialog.dart';
 import 'package:stayverse/feature/profile/view/component/log_out.dart';
@@ -150,6 +151,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   }),
               const ProfileOption(
                   title: 'Notification', trailing: NotificationSwitch()),
+              ProfileOption(
+                  title: 'Curated Messages',
+                  trailing: Icon(Icons.arrow_forward_ios_rounded,
+                      color: Colors.grey.shade500, size: 18),
+                  onTap: () {
+                    $navigate.to(InboxPage.route);
+                  }),
               // const _ProfileOption(
               //     title: 'Finger Print/Face ID', hasToggle: true),
               ProfileOption(

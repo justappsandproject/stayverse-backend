@@ -13,6 +13,7 @@ import 'package:stayvers_agent/core/util/style/app_colors.dart';
 import 'package:stayvers_agent/feature/chefOwner/view/page/chef_profile_page.dart';
 import 'package:stayvers_agent/feature/dashBoard/controller/dashboard_controller.dart';
 import 'package:stayvers_agent/feature/inbox/view/page/chat_support_page.dart';
+import 'package:stayvers_agent/feature/inbox/view/page/inbox_page.dart';
 import 'package:stayvers_agent/feature/profile/controller/profile_controller.dart';
 import 'package:stayvers_agent/feature/profile/view/component/delete_account_dialog.dart';
 import 'package:stayvers_agent/feature/profile/view/component/kyc_option.dart';
@@ -158,6 +159,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ref
                         .read(profileController.notifier)
                         .updateNotificationPreference(true);
+                  }),
+              ProfileOption(
+                  title: 'Curated Messages',
+                  trailing: Icon(Icons.arrow_forward_ios_rounded,
+                      color: Colors.grey.shade500, size: 18),
+                  onTap: () {
+                    $navigate.to(InboxPage.route);
                   }),
               // const _ProfileOption(
               //     title: 'Finger Print/Face ID', hasToggle: true),

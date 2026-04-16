@@ -6,6 +6,7 @@ import 'package:stayvers_agent/feature/carOwner/view/page/edit_ride_details_form
 import 'package:stayvers_agent/feature/carOwner/view/page/edited_preview_page.dart';
 import 'package:stayvers_agent/feature/chefOwner/view/page/edit_chef_profile.dart';
 import 'package:stayvers_agent/feature/inbox/view/page/chat_support_page.dart';
+import 'package:stayvers_agent/feature/inbox/view/page/inbox_page.dart';
 import 'package:stayvers_agent/feature/profile/view/page/delete_account_page.dart';
 import 'package:stayvers_agent/feature/profile/view/page/edit_profile_page.dart';
 import 'package:stayvers_agent/feature/profile/view/page/kyc_verification_page.dart';
@@ -328,6 +329,11 @@ class RouteGenerator {
 
       case ChatSupportPage.route:
         final page = ChatSupportPage(url: args as String);
+        return CustomMaterialPageRoute(
+            settings: RouteSettings(name: settings.name), builder: (_) => page);
+
+      case InboxPage.route:
+        const page = InboxPage();
         return CustomMaterialPageRoute(
             settings: RouteSettings(name: settings.name), builder: (_) => page);
 
