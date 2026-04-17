@@ -19,6 +19,8 @@ export default function CuratedMessagesPage() {
     totalEligible: number;
     sentCount: number;
     failedCount: number;
+    emailSentCount?: number;
+    emailFailedCount?: number;
   } | null>(null);
 
   const canSubmit = title.trim().length > 0 && body.trim().length > 0;
@@ -108,7 +110,7 @@ export default function CuratedMessagesPage() {
       {result && (
         <div className="max-w-3xl bg-[#f6f6f6] rounded-xl border border-[#ececec] p-6">
           <h2 className="font-medium text-lg mb-3">Last broadcast result</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 text-sm">
             <div className="rounded-lg bg-white p-3 border">
               <p className="text-[#858585]">Eligible recipients</p>
               <p className="font-semibold text-lg">{result.totalEligible}</p>
@@ -120,6 +122,14 @@ export default function CuratedMessagesPage() {
             <div className="rounded-lg bg-white p-3 border">
               <p className="text-[#858585]">Failed</p>
               <p className="font-semibold text-lg text-red-700">{result.failedCount}</p>
+            </div>
+            <div className="rounded-lg bg-white p-3 border">
+              <p className="text-[#858585]">Emails sent</p>
+              <p className="font-semibold text-lg text-green-700">{result.emailSentCount ?? 0}</p>
+            </div>
+            <div className="rounded-lg bg-white p-3 border">
+              <p className="text-[#858585]">Email failed</p>
+              <p className="font-semibold text-lg text-red-700">{result.emailFailedCount ?? 0}</p>
             </div>
           </div>
         </div>

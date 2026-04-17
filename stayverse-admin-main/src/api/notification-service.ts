@@ -15,6 +15,8 @@ export interface BroadcastResult {
   totalEligible: number;
   sentCount: number;
   failedCount: number;
+  emailSentCount?: number;
+  emailFailedCount?: number;
 }
 
 export const NotificationService = {

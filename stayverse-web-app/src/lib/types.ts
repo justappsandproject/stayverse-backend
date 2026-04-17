@@ -88,3 +88,12 @@ export interface FavoriteRecord {
     lastname?: string;
   };
 }
+
+export interface CuratedMessage {
+  _id?: string;
+  id?: string;
+  audience?: "user" | "agent" | "all";
+  title: string;
+  body: string;
+  createdAt?: string;
+}

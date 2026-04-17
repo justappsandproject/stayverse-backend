@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Roles } from 'src/common/constants/enum';
 import { UserNotification } from '../interfaces/notification.interface';
 import { FirebaseService } from 'src/common/providers/firebase.service';
+import { EmailService } from 'src/common/providers/email.service';
 import { Model } from 'mongoose';
 import { User, UserDocument } from 'src/modules/user/schemas/user.schema';
 import { BroadcastMessageDto } from '../dto/broadcast-message.dto';
@@ -14,6 +15,7 @@ export class NotificationService {
 
     constructor(
         private readonly firebaseService: FirebaseService,
+        private readonly emailService: EmailService,
         @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
         @InjectModel(CuratedMessage.name)
         private readonly curatedMessageModel: Model<CuratedMessageDocument>,
@@ -89,9 +91,10 @@ export class NotificationService {
             .select('_id email role +deviceToken notificationsEnabled')
             .lean();
 
-        let sentCount = 0;
+        let pushSentCount = 0;
+        let emailSentCount = 0;
         for (const recipient of recipients) {
-            const sent = await this.sendToUser({
+            const pushSent = await this.sendToUser({
                 token: recipient.deviceToken as string,
                 title: payload.title,
                 body: payload.body,
@@ -103,15 +106,33 @@ export class NotificationService {
                     recipientRole: String(recipient.role),
                 },
             });
-            if (sent) sentCount += 1;
+            if (pushSent) pushSentCount += 1;
+
+            const recipientEmail = String(recipient.email || '').trim();
+            if (recipientEmail) {
+                const emailHtml = `
+                    <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+                        <h3 style="margin: 0 0 8px 0;">${payload.title}</h3>
+                        <p style="margin: 0;">${payload.body}</p>
+                    </div>
+                `;
+                const emailSent = await this.emailService.sendEmail(
+                    recipientEmail,
+                    payload.title,
+                    emailHtml,
+                );
+                if (emailSent) emailSentCount += 1;
+            }
         }
 
         return {
             messageId: String(curatedMessage._id),
             audience: payload.audience,
             totalEligible: recipients.length,
-            sentCount,
-            failedCount: recipients.length - sentCount,
+            sentCount: pushSentCount,
+            failedCount: recipients.length - pushSentCount,
+            emailSentCount,
+            emailFailedCount: recipients.length - emailSentCount,
         };
     }
 

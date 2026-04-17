@@ -2,11 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { FavoriteRecord, SessionUser, WalletTransaction } from "@/lib/types";
+import type { CuratedMessage, FavoriteRecord, SessionUser, WalletTransaction } from "@/lib/types";
 import { useSessionStore } from "@/lib/session/store";
 import { deleteMyAccount, updateNotificationPreference, updatePassword } from "@/lib/api/profile";
 import { fundWallet, requestWithdrawal } from "@/lib/api/wallet";
+import { getCuratedMessages } from "@/lib/api/notifications";
 
 export function FavouritePanel({ favourites }: { favourites: FavoriteRecord[] }) {
   const [tab, setTab] = useState<"apartments" | "rides" | "chefs">("apartments");
@@ -100,75 +102,51 @@ export function FavouritePanel({ favourites }: { favourites: FavoriteRecord[] })
 }
 
 export function InboxPanel() {
-  const messages = [
-    {
-      id: "1",
-      name: "James Smith",
-      message: "Pls take a look at the images.",
-      time: "18:31",
-      unreadCount: 3,
-      highlighted: true,
-    },
-    {
-      id: "2",
-      name: "Fullsnack Designer",
-      message: "Hello guys, we have discussed about ...",
-      time: "16:04",
-    },
-    {
-      id: "3",
-      name: "Lee Williamson",
-      message: "Yes, that’s gonna work, hopefully.",
-      time: "06:12",
-    },
-    {
-      id: "4",
-      name: "Ronald Mccoy",
-      message: "Thanks dude 😉",
-      time: "Yesterday",
-      read: true,
-    },
-    {
-      id: "5",
-      name: "Albert Bell",
-      message: "I‘m happy this anime has such grea...",
-      time: "Yesterday",
-      read: true,
-    },
-  ];
+  const token = useSessionStore((state) => state.token);
+  const role = useSessionStore((state) => state.role);
+  const curatedMessagesQuery = useQuery({
+    queryKey: ["curated-messages", role],
+    queryFn: () => getCuratedMessages(1, 30),
+    enabled: Boolean(token && role),
+  });
+  const messages = curatedMessagesQuery.data ?? [];
 
   return (
     <div className="rounded-2xl border border-[#E2E0DD] bg-white p-4">
-      <h3 className="text-xl font-medium text-black">Message</h3>
+      <h3 className="text-xl font-medium text-black">Curated Messages</h3>
       <div className="mt-3">
+        {curatedMessagesQuery.isLoading && (
+          <p className="py-6 text-center text-sm text-[#8F8F8F]">Loading messages...</p>
+        )}
+
+        {!curatedMessagesQuery.isLoading && messages.length === 0 && (
+          <p className="py-6 text-center text-sm text-[#8F8F8F]">No curated messages yet.</p>
+        )}
+
         {messages.map((item, index) => (
-          <div key={item.id} className={index === 0 ? "" : "mt-2.5"}>
-            <button
-              className={`w-full rounded-xl p-2.5 text-left hover:bg-[#FAFAFA] ${
-                item.highlighted ? "bg-[#FFF9E9]" : ""
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-[#FBC036]/25" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-base font-semibold text-black">{item.name}</p>
-                  <p className="truncate text-sm text-[#6E6E6E]">{item.message}</p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <p className="text-xs text-[#9B9B9B]">{item.time}</p>
-                  {item.unreadCount ? (
-                    <span className="mt-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FBC036] px-1.5 text-[11px] font-bold text-white">
-                      {item.unreadCount}
-                    </span>
-                  ) : item.read ? (
-                    <span className="mt-1 text-xs text-[#9B9B9B]">●</span>
-                  ) : null}
-                </div>
-              </div>
-            </button>
-          </div>
+          <CuratedMessageCard key={item._id ?? item.id ?? `${index}`} item={item} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function CuratedMessageCard({ item }: { item: CuratedMessage }) {
+  const createdAt = item.createdAt
+    ? new Date(item.createdAt).toLocaleString("en-NG", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "Recently";
+
+  return (
+    <div className="mt-2.5 rounded-xl border border-[#F1F1F1] bg-white p-3">
+      <p className="text-base font-semibold text-black">{item.title}</p>
+      <p className="mt-1 text-sm text-[#6E6E6E]">{item.body}</p>
+      <p className="mt-2 text-xs text-[#9B9B9B]">{createdAt}</p>
     </div>
   );
 }
