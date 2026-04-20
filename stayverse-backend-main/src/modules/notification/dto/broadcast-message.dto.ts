@@ -1,4 +1,13 @@
-import { IsIn, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+} from 'class-validator';
 
 export class BroadcastMessageDto {
   @IsString()
@@ -14,6 +23,25 @@ export class BroadcastMessageDto {
   @IsNotEmpty()
   @MaxLength(500)
   body: string;
+
+  @IsOptional()
+  @IsString()
+  @IsUrl({ require_tld: false }, { message: 'imageUrl must be a valid URL' })
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['before', 'after'])
+  imagePosition?: 'before' | 'after';
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['now', 'scheduled'])
+  sendMode?: 'now' | 'scheduled';
+
+  @IsOptional()
+  @IsDateString()
+  scheduledAt?: string;
 
   @IsOptional()
   @IsObject()

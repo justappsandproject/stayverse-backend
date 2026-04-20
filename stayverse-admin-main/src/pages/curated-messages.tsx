@@ -1,4 +1,10 @@
-import { NotificationService, type BroadcastAudience } from "@/api/notification-service";
+import {
+  NotificationService,
+  type BroadcastAudience,
+  type CuratedAdminMessage,
+  type ImagePosition,
+  type SendMode,
+} from "@/api/notification-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -8,13 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function CuratedMessagesPage() {
   const [audience, setAudience] = useState<BroadcastAudience>("all");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imagePosition, setImagePosition] = useState<ImagePosition>("after");
+  const [sendMode, setSendMode] = useState<SendMode>("now");
+  const [scheduledAt, setScheduledAt] = useState("");
   const [sending, setSending] = useState(false);
+  const [history, setHistory] = useState<CuratedAdminMessage[]>([]);
   const [result, setResult] = useState<{
     totalEligible: number;
     sentCount: number;
@@ -23,7 +34,19 @@ export default function CuratedMessagesPage() {
     emailFailedCount?: number;
   } | null>(null);
 
-  const canSubmit = title.trim().length > 0 && body.trim().length > 0;
+  const canSubmit =
+    title.trim().length > 0 &&
+    body.trim().length > 0 &&
+    (sendMode === "now" || scheduledAt.trim().length > 0);
+
+  const loadHistory = async () => {
+    const items = await NotificationService.listCuratedMessagesForAdmin(1, 20);
+    setHistory(items);
+  };
+
+  useEffect(() => {
+    void loadHistory();
+  }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +57,10 @@ export default function CuratedMessagesPage() {
       audience,
       title: title.trim(),
       body: body.trim(),
+      imageUrl: imageUrl.trim() || undefined,
+      imagePosition,
+      sendMode,
+      scheduledAt: sendMode === "scheduled" ? new Date(scheduledAt).toISOString() : undefined,
       extras: {
         source: "admin_panel",
       },
@@ -42,6 +69,12 @@ export default function CuratedMessagesPage() {
 
     if (response) {
       setResult(response);
+      setTitle("");
+      setBody("");
+      setImageUrl("");
+      setScheduledAt("");
+      setSendMode("now");
+      await loadHistory();
     }
   };
 
@@ -97,6 +130,61 @@ export default function CuratedMessagesPage() {
           />
         </div>
 
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Image URL (optional)</label>
+          <Input
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="https://example.com/banner.jpg"
+            className="h-11"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Image position</label>
+            <Select
+              value={imagePosition}
+              onValueChange={(value) => setImagePosition(value as ImagePosition)}
+            >
+              <SelectTrigger className="w-full h-11">
+                <SelectValue placeholder="Select image position" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="before">Before text</SelectItem>
+                <SelectItem value="after">After text</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Send mode</label>
+            <Select
+              value={sendMode}
+              onValueChange={(value) => setSendMode(value as SendMode)}
+            >
+              <SelectTrigger className="w-full h-11">
+                <SelectValue placeholder="Select send mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="now">Send now</SelectItem>
+                <SelectItem value="scheduled">Schedule</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {sendMode === "scheduled" && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Scheduled date/time</label>
+            <Input
+              type="datetime-local"
+              value={scheduledAt}
+              onChange={(e) => setScheduledAt(e.target.value)}
+              className="h-11"
+            />
+          </div>
+        )}
+
         <div className="flex items-center justify-between flex-wrap gap-3">
           <p className="text-xs text-[#858585]">
             Tip: keep messages short and action-oriented for better engagement.
@@ -134,6 +222,42 @@ export default function CuratedMessagesPage() {
           </div>
         </div>
       )}
+
+      <div className="max-w-4xl bg-white rounded-xl border border-[#ececec] p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-medium text-lg">Recent curated messages</h2>
+          <Button type="button" variant="outline" onClick={() => void loadHistory()}>
+            Refresh
+          </Button>
+        </div>
+        <div className="mt-4 space-y-3">
+          {history.length === 0 && (
+            <p className="text-sm text-[#858585]">No curated messages found.</p>
+          )}
+          {history.map((item) => (
+            <div key={item._id} className="rounded-lg border border-[#ececec] p-4">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[#858585]">
+                <span className="px-2 py-1 bg-[#f5f5f5] rounded">{item.audience}</span>
+                <span className="px-2 py-1 bg-[#f5f5f5] rounded">{item.status ?? "sent"}</span>
+                <span className="px-2 py-1 bg-[#f5f5f5] rounded">{item.sendMode ?? "now"}</span>
+              </div>
+              <h3 className="mt-2 font-semibold">{item.title}</h3>
+              <p className="text-sm text-[#4f4f4f] mt-1">{item.body}</p>
+              {item.imageUrl && (
+                <p className="text-xs text-[#858585] mt-2">
+                  Image ({item.imagePosition ?? "after"}): {item.imageUrl}
+                </p>
+              )}
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div className="rounded bg-[#f8f8f8] px-2 py-1">Viewed: {item.metrics?.viewedCount ?? 0}</div>
+                <div className="rounded bg-[#f8f8f8] px-2 py-1">Read: {item.metrics?.readCount ?? 0}</div>
+                <div className="rounded bg-[#f8f8f8] px-2 py-1">Likes: {item.metrics?.likeCount ?? 0}</div>
+                <div className="rounded bg-[#f8f8f8] px-2 py-1">Dislikes: {item.metrics?.dislikeCount ?? 0}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
