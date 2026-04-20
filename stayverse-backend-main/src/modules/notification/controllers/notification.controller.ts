@@ -1,5 +1,18 @@
-import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Roles } from 'src/common/constants/enum';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { Role, RolesGuard } from 'src/common/guards/roles.guard';
@@ -7,12 +20,17 @@ import { BroadcastMessageDto } from '../dto/broadcast-message.dto';
 import { NotificationService } from '../services/notification.service';
 import { ListCuratedMessagesDto } from '../dto/list-curated-messages.dto';
 import { ReactCuratedMessageDto } from '../dto/interact-curated-message.dto';
+import { FileUploadPipe } from 'src/common/pipes/file-upload.pipe';
+import { DOUploadService } from 'src/common/providers/digiital-ocean.service';
 
 @ApiTags('Notification')
 @Controller('notification')
 @UseGuards(AuthGuard, RolesGuard)
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly uploadService: DOUploadService,
+  ) {}
 
   @Post('broadcast')
   @Role(Roles.ADMIN)
@@ -79,5 +97,20 @@ export class NotificationController {
       role,
       body.reaction,
     );
+  }
+
+  @Post('curated/upload-image')
+  @Role(Roles.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload curated message image' })
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadCuratedImage(
+    @UploadedFile(new FileUploadPipe()) image: Express.Multer.File,
+  ) {
+    if (!image) {
+      throw new BadRequestException('Image file is required');
+    }
+    const imageUrl = await this.uploadService.uploadFile(image, 'curated-messages');
+    return { imageUrl };
   }
 }

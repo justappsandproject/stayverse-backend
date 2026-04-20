@@ -15,12 +15,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function CuratedMessagesPage() {
   const [audience, setAudience] = useState<BroadcastAudience>("all");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePosition, setImagePosition] = useState<ImagePosition>("after");
   const [sendMode, setSendMode] = useState<SendMode>("now");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -52,15 +55,41 @@ export default function CuratedMessagesPage() {
     e.preventDefault();
     if (!canSubmit) return;
 
+    let scheduledIso: string | undefined;
+    if (sendMode === "scheduled") {
+      const parsed = new Date(scheduledAt);
+      if (Number.isNaN(parsed.getTime())) {
+        toast.warning("Please select a valid schedule date and time.");
+        return;
+      }
+      if (parsed.getTime() <= Date.now()) {
+        toast.warning("Scheduled time must be in the future.");
+        return;
+      }
+      scheduledIso = parsed.toISOString();
+    }
+
+    let uploadedImageUrl = imageUrl.trim() || undefined;
+    if (selectedImage) {
+      setUploadingImage(true);
+      const uploadResult = await NotificationService.uploadCuratedImage(selectedImage);
+      setUploadingImage(false);
+      if (!uploadResult) {
+        setSending(false);
+        return;
+      }
+      uploadedImageUrl = uploadResult;
+    }
+
     setSending(true);
     const response = await NotificationService.sendCuratedBroadcast({
       audience,
       title: title.trim(),
       body: body.trim(),
-      imageUrl: imageUrl.trim() || undefined,
+      imageUrl: uploadedImageUrl,
       imagePosition,
       sendMode,
-      scheduledAt: sendMode === "scheduled" ? new Date(scheduledAt).toISOString() : undefined,
+      scheduledAt: scheduledIso,
       extras: {
         source: "admin_panel",
       },
@@ -72,6 +101,7 @@ export default function CuratedMessagesPage() {
       setTitle("");
       setBody("");
       setImageUrl("");
+      setSelectedImage(null);
       setScheduledAt("");
       setSendMode("now");
       await loadHistory();
@@ -140,6 +170,24 @@ export default function CuratedMessagesPage() {
           />
         </div>
 
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Or upload image</label>
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              setSelectedImage(file);
+            }}
+            className="h-11"
+          />
+          {selectedImage && (
+            <p className="text-xs text-[#858585]">
+              Selected: {selectedImage.name}
+            </p>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Image position</label>
@@ -189,8 +237,8 @@ export default function CuratedMessagesPage() {
           <p className="text-xs text-[#858585]">
             Tip: keep messages short and action-oriented for better engagement.
           </p>
-          <Button type="submit" disabled={!canSubmit || sending}>
-            {sending ? "Sending..." : "Send curated message"}
+          <Button type="submit" disabled={!canSubmit || sending || uploadingImage}>
+            {uploadingImage ? "Uploading image..." : sending ? "Sending..." : "Send curated message"}
           </Button>
         </div>
       </form>

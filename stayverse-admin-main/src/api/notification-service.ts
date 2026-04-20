@@ -55,10 +55,42 @@ export const NotificationService = {
         toast.success("Curated message sent successfully.");
         return response.data?.data as BroadcastResult;
       }
-      toast.warning(response.data?.message || "Failed to send message");
+      const errorMessage = Array.isArray(response.data?.message)
+        ? response.data.message.join(", ")
+        : response.data?.message || "Failed to send message";
+      toast.warning(errorMessage);
       return null;
-    } catch {
-      toast.error("Failed to send curated message");
+    } catch (error: any) {
+      const errorMessage = Array.isArray(error?.response?.data?.message)
+        ? error.response.data.message.join(", ")
+        : error?.response?.data?.message || "Failed to send curated message";
+      toast.error(errorMessage);
+      return null;
+    }
+  },
+
+  async uploadCuratedImage(file: File): Promise<string | null> {
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const response = await axiosInstance.post("/notification/curated/upload-image", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      if (response.status >= 200 && response.status < 300) {
+        const imageUrl = response.data?.data?.imageUrl ?? response.data?.imageUrl;
+        if (typeof imageUrl === "string" && imageUrl.trim().length > 0) {
+          return imageUrl;
+        }
+      }
+      toast.warning("Image upload failed");
+      return null;
+    } catch (error: any) {
+      const errorMessage = Array.isArray(error?.response?.data?.message)
+        ? error.response.data.message.join(", ")
+        : error?.response?.data?.message || "Image upload failed";
+      toast.error(errorMessage);
       return null;
     }
   },
