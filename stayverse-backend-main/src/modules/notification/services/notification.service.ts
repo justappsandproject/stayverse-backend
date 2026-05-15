@@ -9,6 +9,7 @@ import { Model, Types } from 'mongoose';
 import { User, UserDocument } from 'src/modules/user/schemas/user.schema';
 import { BroadcastMessageDto } from '../dto/broadcast-message.dto';
 import { CuratedMessage, CuratedMessageDocument } from '../schemas/curated-message.schema';
+import { curatedMessageEmailTemplate } from 'src/common/providers/template/curated-message-email.template';
 
 @Injectable()
 export class NotificationService {
@@ -84,22 +85,42 @@ export class NotificationService {
     return role === Roles.AGENT ? 'agent' : 'user';
   }
 
-  private buildEmailHtml(message: {
-    title: string;
-    body: string;
-    imageUrl?: string;
-    imagePosition?: 'before' | 'after';
-  }) {
-    const imageTag = message.imageUrl
-      ? `<img src="${message.imageUrl}" alt="Curated message image" style="max-width:100%;border-radius:8px;margin:8px 0;" />`
-      : '';
-    const contentFirst = message.imagePosition !== 'before';
-    return `
-      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-        <h3 style="margin: 0 0 8px 0;">${message.title}</h3>
-        ${contentFirst ? `<p style="margin: 0 0 8px 0;">${message.body}</p>${imageTag}` : `${imageTag}<p style="margin: 0;">${message.body}</p>`}
-      </div>
-    `;
+  private isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  private async sendCuratedEmails(
+    recipients: Array<{ email: string; firstname?: string }>,
+    message: {
+      title: string;
+      body: string;
+      imageUrl?: string;
+      imagePosition?: 'before' | 'after';
+    },
+    concurrency = 8,
+  ) {
+    let emailSentCount = 0;
+    let emailFailedCount = 0;
+
+    for (let i = 0; i < recipients.length; i += concurrency) {
+      const batch = recipients.slice(i, i + concurrency);
+      const results = await Promise.all(
+        batch.map(async (recipient) => {
+          const html = curatedMessageEmailTemplate({
+            recipientName: recipient.firstname,
+            title: message.title,
+            body: message.body,
+            imageUrl: message.imageUrl,
+            imagePosition: message.imagePosition,
+          });
+          return this.emailService.sendEmail(recipient.email, message.title, html);
+        }),
+      );
+      emailSentCount += results.filter(Boolean).length;
+      emailFailedCount += results.filter((sent) => !sent).length;
+    }
+
+    return { emailSentCount, emailFailedCount };
   }
 
   private ensureInteraction(
@@ -159,6 +180,11 @@ export class NotificationService {
         readCount: interactions.filter((item: any) => !!item.readAt).length,
         likeCount: interactions.filter((item: any) => item.reaction === 'like').length,
         dislikeCount: interactions.filter((item: any) => item.reaction === 'dislike').length,
+        pushSentCount: message.pushSentCount ?? 0,
+        pushFailedCount: message.pushFailedCount ?? 0,
+        emailSentCount: message.emailSentCount ?? 0,
+        emailFailedCount: message.emailFailedCount ?? 0,
+        emailEligibleCount: message.emailEligibleCount ?? 0,
       },
     };
   }
@@ -166,56 +192,65 @@ export class NotificationService {
   private async dispatchCuratedMessage(curatedMessage: CuratedMessageDocument) {
     const targetRoles = this.targetRoles(curatedMessage.audience);
     const recipients = await this.userModel
-      .find({ role: { $in: targetRoles } })
-      .select('_id email role +deviceToken notificationsEnabled')
+      .find({ role: { $in: targetRoles }, isDeleted: { $ne: true } })
+      .select('_id email firstname role +deviceToken notificationsEnabled')
       .lean();
 
     let pushSentCount = 0;
-    let emailSentCount = 0;
     let pushEligibleCount = 0;
-    let emailEligibleCount = 0;
 
     for (const recipient of recipients) {
       const canPush = !!recipient.notificationsEnabled && !!recipient.deviceToken;
-      if (canPush) {
-        pushEligibleCount += 1;
-        const pushSent = await this.sendToUser({
-          token: recipient.deviceToken as string,
-          title: curatedMessage.title,
-          body: curatedMessage.body,
-          extras: {
-            ...(curatedMessage.extras || {}),
-            type: 'curated_message',
-            messageId: String(curatedMessage._id),
-            audience: curatedMessage.audience,
-            recipientRole: String(recipient.role),
-            imageUrl: curatedMessage.imageUrl || '',
-            imagePosition: curatedMessage.imagePosition || 'after',
-          },
-        });
-        if (pushSent) pushSentCount += 1;
-      }
+      if (!canPush) continue;
 
-      const recipientEmail = String(recipient.email || '').trim();
-      if (recipientEmail) {
-        emailEligibleCount += 1;
-        const emailSent = await this.emailService.sendEmail(
-          recipientEmail,
-          curatedMessage.title,
-          this.buildEmailHtml({
-            title: curatedMessage.title,
-            body: curatedMessage.body,
-            imageUrl: curatedMessage.imageUrl,
-            imagePosition: curatedMessage.imagePosition,
-          }),
-        );
-        if (emailSent) emailSentCount += 1;
-      }
+      pushEligibleCount += 1;
+      const pushSent = await this.sendToUser({
+        token: recipient.deviceToken as string,
+        title: curatedMessage.title,
+        body: curatedMessage.body,
+        extras: {
+          ...(curatedMessage.extras || {}),
+          type: 'curated_message',
+          messageId: String(curatedMessage._id),
+          audience: curatedMessage.audience,
+          recipientRole: String(recipient.role),
+          imageUrl: curatedMessage.imageUrl || '',
+          imagePosition: curatedMessage.imagePosition || 'after',
+        },
+      });
+      if (pushSent) pushSentCount += 1;
     }
+
+    const emailRecipients = recipients
+      .map((recipient) => ({
+        email: String(recipient.email || '').trim().toLowerCase(),
+        firstname: recipient.firstname ? String(recipient.firstname) : undefined,
+      }))
+      .filter((recipient) => this.isValidEmail(recipient.email));
+
+    const emailEligibleCount = emailRecipients.length;
+    const { emailSentCount, emailFailedCount } = await this.sendCuratedEmails(
+      emailRecipients,
+      {
+        title: curatedMessage.title,
+        body: curatedMessage.body,
+        imageUrl: curatedMessage.imageUrl,
+        imagePosition: curatedMessage.imagePosition,
+      },
+    );
 
     curatedMessage.status = 'sent';
     curatedMessage.deliveredAt = new Date();
+    curatedMessage.pushSentCount = pushSentCount;
+    curatedMessage.pushFailedCount = Math.max(0, pushEligibleCount - pushSentCount);
+    curatedMessage.emailSentCount = emailSentCount;
+    curatedMessage.emailFailedCount = emailFailedCount;
+    curatedMessage.emailEligibleCount = emailEligibleCount;
     await curatedMessage.save();
+
+    this.logger.log(
+      `Curated message ${String(curatedMessage._id)} dispatched: push=${pushSentCount}/${pushEligibleCount}, email=${emailSentCount}/${emailEligibleCount}`,
+    );
 
     return {
       messageId: String(curatedMessage._id),
@@ -224,7 +259,8 @@ export class NotificationService {
       sentCount: pushSentCount,
       failedCount: Math.max(0, pushEligibleCount - pushSentCount),
       emailSentCount,
-      emailFailedCount: Math.max(0, emailEligibleCount - emailSentCount),
+      emailFailedCount,
+      emailEligibleCount,
       scheduled: curatedMessage.sendMode === 'scheduled',
       status: curatedMessage.status,
     };

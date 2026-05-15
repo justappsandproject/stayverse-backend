@@ -64,6 +64,21 @@ export class CuratedMessage {
 
   @Prop({ type: Types.ObjectId, required: false })
   createdBy?: Types.ObjectId;
+
+  @Prop({ default: 0 })
+  pushSentCount?: number;
+
+  @Prop({ default: 0 })
+  pushFailedCount?: number;
+
+  @Prop({ default: 0 })
+  emailSentCount?: number;
+
+  @Prop({ default: 0 })
+  emailFailedCount?: number;
+
+  @Prop({ default: 0 })
+  emailEligibleCount?: number;
 }
 
 export const CuratedMessageSchema = SchemaFactory.createForClass(CuratedMessage);

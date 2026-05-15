@@ -14,18 +14,25 @@ import { DOUploadService } from "./digiital-ocean.service";
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        // Use implicit TLS only for SMTPS (port 465); STARTTLS/plain for others.
-        transport: {
-          host: configService.get<string>("mail.host"),
-          port: configService.get<number>("mail.port"),
-          secure: configService.get<number>("mail.port") === 465,
-          auth: {
-            user: configService.get<string>("mail.user"),
-            pass: configService.get<string>("mail.pass"),
+      useFactory: (configService: ConfigService) => {
+        const port = configService.get<number>("mail.port") || 587;
+        const from = configService.get<string>("mail.from") || "no-reply@stayverse.com";
+        return {
+          transport: {
+            host: configService.get<string>("mail.host"),
+            port,
+            secure: port === 465,
+            auth: {
+              user: configService.get<string>("mail.user"),
+              pass: configService.get<string>("mail.pass"),
+            },
+            ...(port === 587 ? { requireTLS: true } : {}),
           },
-        },
-      }),
+          defaults: {
+            from: `"Stayverse" <${from}>`,
+          },
+        };
+      },
     }),
   ],
   providers: [EmailService, OtpService,GoogleMapsService,DojahService,FirebaseService,DOUploadService],

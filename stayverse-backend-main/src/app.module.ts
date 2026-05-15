@@ -25,6 +25,7 @@ import { BookingModule } from './modules/booking/booking.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { MetricModule } from './modules/metric/metric.module';
+import { TestimonialModule } from './modules/testimonial/testimonial.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -63,6 +64,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     PaymentsModule,
     NotificationModule,
     MetricModule,
+    TestimonialModule,
     LoggerModule,
   ],
   controllers: [AppController],

@@ -18,9 +18,12 @@ export class EmailService {
 
     async sendEmail(to: string, subject: string, message: string) {
         try {
+            const fromAddress =
+                this.configService.get<string>('mail.from') ||
+                this.configService.get<string>('mail.user');
             const mailOptions = {
                 to,
-                from: this.configService.get<string>('mail.user'),
+                from: fromAddress,
                 subject,
                 html: message,
             };
