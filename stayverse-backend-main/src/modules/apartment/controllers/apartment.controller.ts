@@ -35,6 +35,7 @@ import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
 import { ServiceQueryDto } from 'src/common/dtos/service-query.dto';
 import { AuthenticatedRequest } from 'src/common/types/app.interface';
 import { DOUploadService } from 'src/common/providers/digiital-ocean.service';
+import { AdminUpdateGalleryImagesDto } from 'src/common/dtos/admin-update-images.dto';
 
 @ApiTags('Apartments')
 @Controller('apartment')
@@ -198,6 +199,41 @@ export class ApartmentController {
         @Body() dto: UpdateApartmentStatusDto,
     ) {
         return this.apartmentService.updateApartmentStatus(id, dto.status);
+    }
+
+    @Patch(':id/images')
+    @Role(Roles.ADMIN)
+    @UseInterceptors(FileFieldsInterceptor([{ name: 'apartmentImages', maxCount: 12 }]))
+    @ApiBearerAuth()
+    @ApiConsumes('multipart/form-data')
+    @ApiOperation({
+        summary: 'Admin: update apartment gallery images',
+        description: 'Keep selected URLs and upload new images. Replaces the full gallery.',
+    })
+    async updateImagesAdmin(
+        @Param('id') id: string,
+        @Body() body: AdminUpdateGalleryImagesDto,
+        @UploadedFiles(new FileUploadPipe()) files: Record<string, Express.Multer.File[]>,
+    ) {
+        let keepImages: string[] = [];
+        if (body.keepImages) {
+            try {
+                const parsed = JSON.parse(body.keepImages);
+                if (!Array.isArray(parsed)) {
+                    throw new BadRequestException('keepImages must be a JSON array');
+                }
+                keepImages = parsed.filter((u) => typeof u === 'string' && u.trim());
+            } catch {
+                throw new BadRequestException('keepImages must be valid JSON');
+            }
+        }
+
+        const newFiles = files?.apartmentImages || [];
+        const uploadedUrls = newFiles.length
+            ? await this.uploadService.uploadFiles(newFiles, 'apartments')
+            : [];
+
+        return this.apartmentService.updateImagesByAdmin(id, [...keepImages, ...uploadedUrls]);
     }
 
     @Delete(':id')

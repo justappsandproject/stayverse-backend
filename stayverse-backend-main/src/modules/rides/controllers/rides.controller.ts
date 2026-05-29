@@ -44,6 +44,7 @@ import { AuthenticatedRequest } from 'src/common/types/app.interface';
 import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
 import { ServiceQueryDto } from 'src/common/dtos/service-query.dto';
 import { DOUploadService } from 'src/common/providers/digiital-ocean.service';
+import { AdminUpdateGalleryImagesDto } from 'src/common/dtos/admin-update-images.dto';
 
 @ApiTags('Rides')
 @Controller('ride')
@@ -224,6 +225,40 @@ export class RidesController {
         @Body() dto: UpdateRideStatusDto,
     ) {
         return this.ridesService.updateRideStatus(id, dto.status);
+    }
+
+    @Patch(':id/images')
+    @Role(Roles.ADMIN)
+    @UseInterceptors(FileFieldsInterceptor([{ name: 'rideImages', maxCount: 12 }]))
+    @ApiConsumes('multipart/form-data')
+    @ApiOperation({
+        summary: 'Admin: update ride gallery images',
+        description: 'Keep selected URLs and upload new images. Replaces the full gallery.',
+    })
+    async updateImagesAdmin(
+        @Param('id') id: string,
+        @Body() body: AdminUpdateGalleryImagesDto,
+        @UploadedFiles(new FileUploadPipe()) files: Record<string, Express.Multer.File[]>,
+    ) {
+        let keepImages: string[] = [];
+        if (body.keepImages) {
+            try {
+                const parsed = JSON.parse(body.keepImages);
+                if (!Array.isArray(parsed)) {
+                    throw new BadRequestException('keepImages must be a JSON array');
+                }
+                keepImages = parsed.filter((u) => typeof u === 'string' && u.trim());
+            } catch {
+                throw new BadRequestException('keepImages must be valid JSON');
+            }
+        }
+
+        const newFiles = files?.rideImages || [];
+        const uploadedUrls = newFiles.length
+            ? await this.uploadService.uploadFiles(newFiles, 'rides')
+            : [];
+
+        return this.ridesService.updateImagesByAdmin(id, [...keepImages, ...uploadedUrls]);
     }
 
     @Delete(':id')

@@ -145,6 +145,45 @@ export class ChefController {
     return this.chefService.updateChefStatus(id, dto.status);
   }
 
+  @Patch(':id/images')
+  @Role(Roles.ADMIN)
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'profilePicture', maxCount: 1 },
+      { name: 'coverPhoto', maxCount: 1 },
+    ]),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Admin: update chef profile or cover photo',
+    description: 'Upload one or both images. Omitted images are left unchanged.',
+  })
+  async updateImagesAdmin(
+    @Param('id') id: string,
+    @UploadedFiles(new FileUploadPipe()) files: {
+      profilePicture?: Express.Multer.File[];
+      coverPhoto?: Express.Multer.File[];
+    },
+  ) {
+    const payload: { profilePicture?: string; coverPhoto?: string } = {};
+
+    if (files?.profilePicture?.length === 1) {
+      payload.profilePicture = await this.uploadService.uploadFile(
+        files.profilePicture[0],
+        'chefs',
+      );
+    }
+
+    if (files?.coverPhoto?.length === 1) {
+      payload.coverPhoto = await this.uploadService.uploadFile(
+        files.coverPhoto[0],
+        'chefs',
+      );
+    }
+
+    return this.chefService.updateImagesByAdmin(id, payload);
+  }
+
   @Post(':id/rating')
   @ApiBearerAuth()
   @Role(Roles.USER)

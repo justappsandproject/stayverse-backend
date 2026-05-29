@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import { normalizeMediaUrls } from "src/common/utils/media-url.utils";
 import { BookingStatus } from "src/common/constants/enum";
 import {
   Apartment,
@@ -38,8 +40,21 @@ export class ApartmentService {
     private readonly ratingModel: Model<ApartmentRatingDocument>,
     private googleMapsService: GoogleMapsService,
     private notificationEvents: NotificationEvents,
-    @InjectModel(Booking.name) private readonly bookingModel: Model<BookingDocument>
+    @InjectModel(Booking.name) private readonly bookingModel: Model<BookingDocument>,
+    private readonly configService: ConfigService,
   ) { }
+
+  private get cdnBase(): string {
+    return this.configService.get<string>('do.cdnUrl') || '';
+  }
+
+  private withNormalizedImages<T extends { apartmentImages?: string[] }>(doc: T): T {
+    if (!doc) return doc;
+    return {
+      ...doc,
+      apartmentImages: normalizeMediaUrls(doc.apartmentImages, this.cdnBase),
+    };
+  }
 
   async create(createDto: CreateApartmentDto, agentId: string, images: string[]) {
     const geo = await this.googleMapsService.reverseGeocode(createDto.placeId);
@@ -156,7 +171,23 @@ export class ApartmentService {
   async findOne(id: string) {
     const result = await this.getApartment(this.apartmentModel, { _id: toObjectId(id) });
     if (!result.apartments.length) throw new NotFoundException("Apartment not found");
-    return result.apartments[0];
+    return this.withNormalizedImages(result.apartments[0]);
+  }
+
+  async updateImagesByAdmin(id: string, images: string[]) {
+    const normalized = normalizeMediaUrls(images, this.cdnBase);
+    if (normalized.length < 1 || normalized.length > 12) {
+      throw new BadRequestException('Apartment must have between 1 and 12 images');
+    }
+
+    const apartment = await this.apartmentModel.findOneAndUpdate(
+      { _id: toObjectId(id), isDeleted: { $ne: true } },
+      { $set: { apartmentImages: normalized } },
+      { new: true, runValidators: false },
+    );
+
+    if (!apartment) throw new NotFoundException('Apartment not found');
+    return this.withNormalizedImages(apartment.toObject());
   }
 
   async updateApartmentStatus(apartmentId: string, newStatus: ServiceStatus) {
@@ -258,7 +289,7 @@ export class ApartmentService {
     });
 
     return {
-      apartments: result.data,
+      apartments: result.data.map((a) => this.withNormalizedImages(a)),
       pagination: result.pagination,
     };
   }

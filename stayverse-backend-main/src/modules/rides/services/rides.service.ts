@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
+import { normalizeMediaUrls } from "src/common/utils/media-url.utils";
 import { Model, Types } from "mongoose";
 import { Ride, RideDocument } from "../schemas/rides.schema";
 import { CreateRideDto, UpdateRideDto, SearchRidesDto, CreateRideRatingDto, UpdateRideRatingDto } from "../dto/rides.dto";
@@ -23,8 +25,21 @@ export class RidesService {
         @InjectModel(RideRating.name) private readonly ratingModel: Model<RideRatingDocument>,
         private googleMapsService: GoogleMapsService,
         private notificationEvents: NotificationEvents,
-        @InjectModel(Booking.name) private readonly bookingModel: Model<BookingDocument>
+        @InjectModel(Booking.name) private readonly bookingModel: Model<BookingDocument>,
+        private readonly configService: ConfigService,
     ) { }
+
+    private get cdnBase(): string {
+        return this.configService.get<string>('do.cdnUrl') || '';
+    }
+
+    private withNormalizedImages<T extends { rideImages?: string[] }>(doc: T): T {
+        if (!doc) return doc;
+        return {
+            ...doc,
+            rideImages: normalizeMediaUrls(doc.rideImages, this.cdnBase),
+        };
+    }
 
     private flattenAgent(obj: any) {
         if (obj.agentId?.userId) {
@@ -72,9 +87,28 @@ export class RidesService {
                 .exec(),
             this.rideModel.countDocuments(filter)
         ]);
-        items.forEach((item: any) => this.flattenAgent(item));
+        items.forEach((item: any) => {
+            this.flattenAgent(item);
+            Object.assign(item, this.withNormalizedImages(item));
+        });
 
         return { items, pagination: { total, totalPages: Math.ceil(total / limit), currentPage: page } };
+    }
+
+    async updateImagesByAdmin(id: string, images: string[]) {
+        const normalized = normalizeMediaUrls(images, this.cdnBase);
+        if (normalized.length < 1 || normalized.length > 12) {
+            throw new BadRequestException('Ride must have between 1 and 12 images');
+        }
+
+        const ride = await this.rideModel.findOneAndUpdate(
+            { _id: toObjectId(id), isDeleted: { $ne: true } },
+            { $set: { rideImages: normalized } },
+            { new: true, runValidators: false },
+        );
+
+        if (!ride) throw new NotFoundException('Ride not found');
+        return this.withNormalizedImages(ride.toObject());
     }
 
     async findAll(query: PaginationQueryDto) {
@@ -209,7 +243,7 @@ export class RidesService {
             .exec() as any;
 
         if (!ride) throw new NotFoundException('Ride not found');
-        return this.flattenAgent(ride);
+        return this.withNormalizedImages(this.flattenAgent(ride));
     }
     async update(id: string, updateRideDto: UpdateRideDto, uploadedUrls: string[], agentId: string): Promise<Ride> {
         const cleanedDto = stripEmptyFields(updateRideDto);

@@ -1,5 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { normalizeMediaUrl } from 'src/common/utils/media-url.utils';
 import { Connection, Model, Types } from 'mongoose';
 import dayjs from 'dayjs';
 import tz from 'dayjs/plugin/timezone';
@@ -51,7 +53,25 @@ export class ChefService {
     @InjectConnection() private readonly connection: Connection,
     private readonly notificationEvents: NotificationEvents,
     private readonly googleMapsService: GoogleMapsService,
+    private readonly configService: ConfigService,
   ) { }
+
+  private get cdnBase(): string {
+    return this.configService.get<string>('do.cdnUrl') || '';
+  }
+
+  private withNormalizedChefImages<T extends { profilePicture?: string; coverPhoto?: string }>(chef: T): T {
+    if (!chef) return chef;
+    return {
+      ...chef,
+      ...(chef.profilePicture !== undefined && {
+        profilePicture: normalizeMediaUrl(chef.profilePicture, this.cdnBase) ?? chef.profilePicture,
+      }),
+      ...(chef.coverPhoto !== undefined && {
+        coverPhoto: normalizeMediaUrl(chef.coverPhoto, this.cdnBase) ?? chef.coverPhoto,
+      }),
+    };
+  }
 
   private flattenAgent(chef: any) {
     if (chef.agent?.user) {
@@ -425,6 +445,7 @@ export class ChefService {
       this.flattenAgent(chef);
       chef.withdrawalCount = withdrawalsMap.get(agentId?.toString()) || 0;
       chef.user = chef.agent;
+      Object.assign(chef, this.withNormalizedChefImages(chef));
     });
 
     return {
@@ -693,6 +714,38 @@ export class ChefService {
     if (!updatedChef) throw new NotFoundException('Chef not found');
 
     return updatedChef;
+  }
+
+  async updateImagesByAdmin(
+    chefId: string,
+    images: { profilePicture?: string; coverPhoto?: string },
+  ) {
+    const update: Record<string, string> = {};
+
+    if (images.profilePicture) {
+      const url = normalizeMediaUrl(images.profilePicture, this.cdnBase);
+      if (!url) throw new BadRequestException('Invalid profile picture URL');
+      update.profilePicture = url;
+    }
+
+    if (images.coverPhoto) {
+      const url = normalizeMediaUrl(images.coverPhoto, this.cdnBase);
+      if (!url) throw new BadRequestException('Invalid cover photo URL');
+      update.coverPhoto = url;
+    }
+
+    if (!Object.keys(update).length) {
+      throw new BadRequestException('At least one image (profilePicture or coverPhoto) is required');
+    }
+
+    const chef = await this.chefModel.findByIdAndUpdate(
+      chefId,
+      { $set: update },
+      { new: true, runValidators: false },
+    );
+
+    if (!chef) throw new NotFoundException('Chef not found');
+    return this.withNormalizedChefImages(chef.toObject());
   }
 
   async hasExpCertProfile(chefId: string) {
