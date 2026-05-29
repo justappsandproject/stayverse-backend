@@ -14,6 +14,7 @@ export function ChefProfileModal() {
   const { open, setOpen, metadata } = useModalStore().chefProfileModal;
   const chefProfile: Chef | null = metadata?.chef || null;
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   if (!chefProfile) {
     return (

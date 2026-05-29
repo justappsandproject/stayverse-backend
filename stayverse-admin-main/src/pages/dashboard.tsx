@@ -138,7 +138,7 @@ export default function Dashboard() {
       <div className="pt-[60px] pl-[40px] pr-[60px] pb-[50px] space-y-3">
         <h3 className="text-xl font-semibold">Welcome back</h3>
         <div className="w-full flex gap-6 flex-wrap">
-          {cardsToShow.map((metric, index) => (
+          {cardsToShow.map((metric) => (
             <MetricCard
               key={metric.title}
               title={metric.title}
