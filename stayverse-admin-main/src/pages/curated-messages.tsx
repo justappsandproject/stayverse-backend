@@ -35,6 +35,7 @@ export default function CuratedMessagesPage() {
     failedCount: number;
     emailSentCount?: number;
     emailFailedCount?: number;
+    emailEligibleCount?: number;
   } | null>(null);
 
   const canSubmit =
@@ -235,7 +236,7 @@ export default function CuratedMessagesPage() {
 
         <div className="flex items-center justify-between flex-wrap gap-3">
           <p className="text-xs text-[#858585]">
-            Tip: keep messages short and action-oriented for better engagement.
+            Messages are sent to push notifications and every recipient email on file.
           </p>
           <Button type="submit" disabled={!canSubmit || sending || uploadingImage}>
             {uploadingImage ? "Uploading image..." : sending ? "Sending..." : "Send curated message"}
@@ -246,18 +247,22 @@ export default function CuratedMessagesPage() {
       {result && (
         <div className="max-w-3xl bg-[#f6f6f6] rounded-xl border border-[#ececec] p-6">
           <h2 className="font-medium text-lg mb-3">Last broadcast result</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-sm">
             <div className="rounded-lg bg-white p-3 border">
               <p className="text-[#858585]">Eligible recipients</p>
               <p className="font-semibold text-lg">{result.totalEligible}</p>
             </div>
             <div className="rounded-lg bg-white p-3 border">
-              <p className="text-[#858585]">Sent</p>
+              <p className="text-[#858585]">Push sent</p>
               <p className="font-semibold text-lg text-green-700">{result.sentCount}</p>
             </div>
             <div className="rounded-lg bg-white p-3 border">
-              <p className="text-[#858585]">Failed</p>
+              <p className="text-[#858585]">Push failed</p>
               <p className="font-semibold text-lg text-red-700">{result.failedCount}</p>
+            </div>
+            <div className="rounded-lg bg-white p-3 border">
+              <p className="text-[#858585]">Email eligible</p>
+              <p className="font-semibold text-lg">{result.emailEligibleCount ?? 0}</p>
             </div>
             <div className="rounded-lg bg-white p-3 border">
               <p className="text-[#858585]">Emails sent</p>
@@ -296,11 +301,14 @@ export default function CuratedMessagesPage() {
                   Image ({item.imagePosition ?? "after"}): {item.imageUrl}
                 </p>
               )}
-              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-xs">
                 <div className="rounded bg-[#f8f8f8] px-2 py-1">Viewed: {item.metrics?.viewedCount ?? 0}</div>
                 <div className="rounded bg-[#f8f8f8] px-2 py-1">Read: {item.metrics?.readCount ?? 0}</div>
                 <div className="rounded bg-[#f8f8f8] px-2 py-1">Likes: {item.metrics?.likeCount ?? 0}</div>
                 <div className="rounded bg-[#f8f8f8] px-2 py-1">Dislikes: {item.metrics?.dislikeCount ?? 0}</div>
+                <div className="rounded bg-[#f8f8f8] px-2 py-1">Push: {item.metrics?.pushSentCount ?? 0}</div>
+                <div className="rounded bg-[#f8f8f8] px-2 py-1">Emails: {item.metrics?.emailSentCount ?? 0}</div>
+                <div className="rounded bg-[#f8f8f8] px-2 py-1">Email fail: {item.metrics?.emailFailedCount ?? 0}</div>
               </div>
             </div>
           ))}

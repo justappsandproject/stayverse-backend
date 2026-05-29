@@ -23,6 +23,7 @@ export interface BroadcastResult {
   failedCount: number;
   emailSentCount?: number;
   emailFailedCount?: number;
+  emailEligibleCount?: number;
   scheduled?: boolean;
   scheduledAt?: string;
   status?: "pending" | "sent";
@@ -44,6 +45,11 @@ export interface CuratedAdminMessage {
     readCount?: number;
     likeCount?: number;
     dislikeCount?: number;
+    pushSentCount?: number;
+    pushFailedCount?: number;
+    emailSentCount?: number;
+    emailFailedCount?: number;
+    emailEligibleCount?: number;
   };
 }
 
@@ -52,8 +58,20 @@ export const NotificationService = {
     try {
       const response = await axiosInstance.post("/notification/broadcast", payload);
       if (response.status >= 200 && response.status < 300) {
-        toast.success("Curated message sent successfully.");
-        return response.data?.data as BroadcastResult;
+        const result = response.data?.data as BroadcastResult;
+        if (result?.scheduled) {
+          toast.success("Curated message scheduled successfully.");
+        } else {
+          const emailsSent = result?.emailSentCount ?? 0;
+          const emailsFailed = result?.emailFailedCount ?? 0;
+          const pushSent = result?.sentCount ?? 0;
+          toast.success(
+            `Message delivered: ${pushSent} push, ${emailsSent} email${emailsSent === 1 ? "" : "s"}${
+              emailsFailed > 0 ? ` (${emailsFailed} email failed)` : ""
+            }.`,
+          );
+        }
+        return result;
       }
       const errorMessage = Array.isArray(response.data?.message)
         ? response.data.message.join(", ")

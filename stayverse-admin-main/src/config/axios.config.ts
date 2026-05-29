@@ -2,9 +2,15 @@ import axios from "axios";
 import useAuthStore from "@/stores/auth.store";
 import { toast } from "sonner";
 
-const BASE_URL_STAGING = import.meta.env.VITE_API_URL || 'https://stayverse-backend-lzlu.onrender.com/';
+const FALLBACK_API_URL = "https://stayverse-backend-lzlu.onrender.com/";
+const ENV_API_URL = import.meta.env.VITE_API_URL;
+const IS_PROD = import.meta.env.PROD;
 
-export const API_URL = BASE_URL_STAGING;
+// Guard against broken production deployments where VITE_API_URL is set to localhost.
+export const API_URL =
+  !ENV_API_URL || (IS_PROD && ENV_API_URL.includes("localhost"))
+    ? FALLBACK_API_URL
+    : ENV_API_URL;
 
 export const axiosInstance = axios.create({
     baseURL: API_URL,

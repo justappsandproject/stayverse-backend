@@ -6,6 +6,9 @@ import { Button } from "../ui/button";
 import { ServiceStatus } from "@/types";
 import { ChefService } from "@/api/chef-service";
 import { useState } from "react";
+import { ChefPhotosEditor } from "@/components/listings/listing-images-editor";
+import { ListingImagesService } from "@/api/listing-images-service";
+import { useNavigate } from "react-router-dom";
 
 export function ChefProfileModal() {
   const { open, setOpen, metadata } = useModalStore().chefProfileModal;
@@ -65,6 +68,19 @@ export function ChefProfileModal() {
                         <span className="sr-only">Close</span>
                     </Button> */}
         </div>
+
+        <ChefPhotosEditor
+          profilePicture={chefProfile.profilePicture}
+          coverPhoto={chefProfile.coverPhoto}
+          onSave={async (files) => {
+            const result = await ListingImagesService.updateChefImages(chefProfile._id, files);
+            if (result) {
+              navigate(0);
+              return true;
+            }
+            return false;
+          }}
+        />
 
         {/* Stats section */}
         <div className="grid grid-cols-3 py-6 px-8 border-b">

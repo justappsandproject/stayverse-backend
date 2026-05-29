@@ -26,10 +26,16 @@ export const AuthService = {
                 toast.success('Login successful.');
                 return data?.data as LoginResponse;
             } else {
-                toast.warning(data?.message);
+                const errorMessage = Array.isArray(data?.message)
+                    ? data.message.join(", ")
+                    : data?.message || "Login failed";
+                toast.warning(errorMessage);
             }
-        } catch {
-            toast.error('Login failed! Please try again');
+        } catch (error: any) {
+            const errorMessage = Array.isArray(error?.response?.data?.message)
+                ? error.response.data.message.join(", ")
+                : error?.response?.data?.message || 'Login failed! Please try again';
+            toast.error(errorMessage);
         }
     }
 }

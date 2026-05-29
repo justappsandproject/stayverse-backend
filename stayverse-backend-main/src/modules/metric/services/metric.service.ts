@@ -7,6 +7,10 @@ import { UserService } from 'src/modules/user/services/user.service';
 
 @Injectable()
 export class MetricService {
+  private dashboardCache: { data: Record<string, number>; expiresAt: number } | null =
+    null;
+  private readonly cacheTtlMs = 60_000;
+
   constructor(
     private readonly apartmentService: ApartmentService,
     private readonly rideService: RidesService,
@@ -16,6 +20,10 @@ export class MetricService {
   ) {}
 
   async getDashboardMetrics() {
+    if (this.dashboardCache && Date.now() < this.dashboardCache.expiresAt) {
+      return this.dashboardCache.data;
+    }
+
     const [
       totalApartments,
       totalRides,
@@ -30,12 +38,19 @@ export class MetricService {
       this.userService.getAdminEarnings(),
     ]);
 
-    return {
+    const data = {
       totalApartments,
       totalRides,
       totalChefs,
       totalBookings,
       totalEarnings
     };
+
+    this.dashboardCache = {
+      data,
+      expiresAt: Date.now() + this.cacheTtlMs,
+    };
+
+    return data;
   }
 }

@@ -15,6 +15,7 @@ import EscrowsPage from "./pages/escrows";
 import HostDetails from "./pages/host-details";
 import BookingDetails from "./pages/booking-details";
 import CuratedMessagesPage from "./pages/curated-messages";
+import ManageTestimonialsPage from "./pages/manage-testimonials";
 
 const router = createBrowserRouter([
   {
@@ -72,6 +73,10 @@ const router = createBrowserRouter([
       {
         path: "curated-messages",
         element: <CuratedMessagesPage />,
+      },
+      {
+        path: "testimonials",
+        element: <ManageTestimonialsPage />,
       },
       {
         path: "*",

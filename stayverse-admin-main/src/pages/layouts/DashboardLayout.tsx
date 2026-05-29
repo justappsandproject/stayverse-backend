@@ -14,14 +14,21 @@ import {
   LogOut,
   Megaphone,
   MessageSquareText,
+  Quote,
   SearchIcon,
   ShieldCheck,
 } from "lucide-react";
+import { useEffect } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import ModalProvider from "../providers/ModalProvider";
+import { MetricsService } from "@/api/metrics-service";
 
 export default function DashboardLayout() {
   const { setIsAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    MetricsService.prefetchDashboardMetrics();
+  }, []);
 
   const navLinks = [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -32,6 +39,7 @@ export default function DashboardLayout() {
     { name: "Transactions", path: "/transactions", icon: HandCoins },
     { name: "Escrows", path: "/escrows", icon: ShieldCheck },
     { name: "Curated Messages", path: "/curated-messages", icon: Megaphone },
+    { name: "Testimonials", path: "/testimonials", icon: Quote },
   ];
 
   return (

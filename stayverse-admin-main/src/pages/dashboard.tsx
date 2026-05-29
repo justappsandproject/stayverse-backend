@@ -1,6 +1,5 @@
 import { UserService } from "@/api/user-service";
 import MetricCard from "@/components/dashboard/metrics-card";
-// import UserInfoCard from "@/components/dashboard/user-info-card";
 import { UserTable } from "@/components/dashboard/user-table";
 import {
   Select,
@@ -11,62 +10,74 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/format.utils";
 import { SearchIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { User } from "@/types/user";
 import { ManualPaginationControl } from "@/components/ManualPagination";
-import { MetricsService, type DashboardMetrics } from "@/api/metrics-service";
+import {
+  MetricsService,
+  type DashboardMetrics,
+} from "@/api/metrics-service";
+
+function mapMetricsToCards(data: DashboardMetrics) {
+  return [
+    { title: "Total booking", value: String(data.totalBookings ?? 0) },
+    { title: "Total apartments", value: String(data.totalApartments ?? 0) },
+    { title: "Total rides", value: String(data.totalRides ?? 0) },
+    { title: "Total chefs", value: String(data.totalChefs ?? 0) },
+    {
+      title: "Earnings",
+      value: formatCurrency(data.totalEarnings ?? 0),
+      fontSize: "30px",
+    },
+  ];
+}
 
 export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [status, setStatus] = useState("all");
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState<{
-    pageIndex: number;
-    pageSize: number;
-  }>({
+  const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   });
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [actionLoadingUserId, setActionLoadingUserId] = useState<string | null>(null);
+  const [actionLoadingUserId, setActionLoadingUserId] = useState<string | null>(
+    null,
+  );
 
-  const defaultMetrics = [
-    { title: "Total booking", value: "0" },
-    { title: "Total apartments", value: "0" },
-    { title: "Total rides", value: "0" },
-    { title: "Total chefs", value: "0" },
-    { title: "Earnings", value: formatCurrency(0) },
-  ];
-
-  const [metricsData, setMetricsData] = useState<
-    { title: string; value: string; fontSize?: string }[]
-  >([]);
+  const cachedOnMount = MetricsService.getCachedMetrics();
+  const [metricsData, setMetricsData] = useState(() =>
+    cachedOnMount ? mapMetricsToCards(cachedOnMount) : [],
+  );
+  const [metricsLoading, setMetricsLoading] = useState(!cachedOnMount);
 
   useEffect(() => {
-    MetricsService.getDashboardMetrics().then((data: DashboardMetrics) => {
-      if (!data) return;
-      const mapped = [
-        { title: "Total booking", value: String(data.totalBookings ?? 0) },
-        { title: "Total apartments", value: String(data.totalApartments ?? 0) },
-        { title: "Total rides", value: String(data.totalRides ?? 0) },
-        { title: "Total chefs", value: String(data.totalChefs ?? 0) },
-        {
-          title: "Earnings",
-          value: formatCurrency(data.totalEarnings ?? 0),
-          fontSize: "30px",
-        },
-      ];
-      setMetricsData(mapped);
+    let cancelled = false;
+
+    MetricsService.getDashboardMetrics().then((data) => {
+      if (cancelled || !data) return;
+      setMetricsData(mapMetricsToCards(data));
+      setMetricsLoading(false);
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearchTerm(searchTerm), 350);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  const fetchUsers = useCallback(() => {
     setLoading(true);
     UserService.getAllUsers({
       page: pagination.pageIndex + 1,
       limit: pagination.pageSize,
-      searchTerm,
+      searchTerm: debouncedSearchTerm || undefined,
       ...(status !== "all" && {
         isEmailVerified: status === "verified" ? "true" : "false",
       }),
@@ -78,22 +89,22 @@ export default function Dashboard() {
       .finally(() => {
         setLoading(false);
       });
-  }, [pagination.pageIndex, pagination.pageSize, searchTerm, status]);
+  }, [
+    pagination.pageIndex,
+    pagination.pageSize,
+    debouncedSearchTerm,
+    status,
+  ]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleApproveUser = async (userId: string) => {
     setActionLoadingUserId(userId);
     try {
       await UserService.updateKycStatus(userId, "verified");
-      const response = await UserService.getAllUsers({
-        page: pagination.pageIndex + 1,
-        limit: pagination.pageSize,
-        searchTerm,
-        ...(status !== "all" && {
-          isEmailVerified: status === "verified" ? "true" : "false",
-        }),
-      });
-      setUsers(response.data);
-      setTotalPages(response.pagination.totalPages);
+      fetchUsers();
     } finally {
       setActionLoadingUserId(null);
     }
@@ -103,35 +114,41 @@ export default function Dashboard() {
     setActionLoadingUserId(userId);
     try {
       await UserService.updateKycStatus(userId, "declined");
-      const response = await UserService.getAllUsers({
-        page: pagination.pageIndex + 1,
-        limit: pagination.pageSize,
-        searchTerm,
-        ...(status !== "all" && {
-          isEmailVerified: status === "verified" ? "true" : "false",
-        }),
-      });
-      setUsers(response.data);
-      setTotalPages(response.pagination.totalPages);
+      fetchUsers();
     } finally {
       setActionLoadingUserId(null);
     }
   };
+
+  const metricTitles = [
+    "Total booking",
+    "Total apartments",
+    "Total rides",
+    "Total chefs",
+    "Earnings",
+  ];
+
+  const cardsToShow =
+    metricsData.length > 0
+      ? metricsData
+      : metricTitles.map((title) => ({ title, value: "" }));
 
   return (
     <div className="w-full ">
       <div className="pt-[60px] pl-[40px] pr-[60px] pb-[50px] space-y-3">
         <h3 className="text-xl font-semibold">Welcome back</h3>
         <div className="w-full flex gap-6 flex-wrap">
-          {(metricsData.length ? metricsData : defaultMetrics).map(
-            (metric, index) => (
-              <MetricCard
-                key={index}
-                title={metric.title}
-                value={metric.value}
-              />
-            ),
-          )}
+          {cardsToShow.map((metric, index) => (
+            <MetricCard
+              key={metric.title}
+              title={metric.title}
+              value={metric.value}
+              fontSize={
+                metric.title === "Earnings" ? "30px" : undefined
+              }
+              loading={metricsLoading}
+            />
+          ))}
         </div>
       </div>
 
@@ -139,9 +156,7 @@ export default function Dashboard() {
         <div className="w-full px-10 py-3 text-lg font-semibold border-t border-gray-100 mt-4">
           Users
         </div>
-        {/* <hr className="border-t-[0.3px] border-[#989898] " /> */}
         <div className="w-full px-10 pt-5 pb-16 space-y-6">
-          {/* Search and filter components */}
           <div className="w-full flex flex-wrap items-center justify-between gap-5">
             <div className="flex-1 max-w-[600px] flex gap-3">
               <div className="flex-1 rounded-lg bg-gray-100 px-4 py-2 flex items-center gap-2 border border-transparent focus-within:border-primary-500 focus-within:bg-white transition-all shadow-sm">
@@ -155,7 +170,8 @@ export default function Dashboard() {
                 />
               </div>
               <button
-                type="submit"
+                type="button"
+                onClick={() => setDebouncedSearchTerm(searchTerm)}
                 className="bg-primary-500 hover:bg-primary-600 text-dark font-medium rounded-lg px-6 py-2 text-[14px] transition-colors shadow-sm"
               >
                 Search
@@ -178,7 +194,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Search results */}
           <div className="w-full space-y-4">
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-medium text-gray-500">

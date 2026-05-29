@@ -8,6 +8,8 @@ import { AgentService } from "@/api/agent-service";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "@/lib/format.utils";
+import { ListingGalleryEditor } from "@/components/listings/listing-images-editor";
+import { ListingImagesService } from "@/api/listing-images-service";
 
 export default function RideDetailsModal() {
   const { open, setOpen, metadata } = useModalStore().rideDetails;
@@ -58,18 +60,22 @@ export default function RideDetailsModal() {
           <p className="text-gray-600 mt-1">{ride.address}</p>
         </div>
 
-        {/* Image Gallery */}
-        <div className=" flex gap-3 overflow-x-auto pb-2">
-          {ride.rideImages.map((image, index) => (
-            <div key={index} className="min-w-[240px] h-[150px] relative">
-              <img
-                src={image || "/placeholder.svg"}
-                alt={`${ride.rideName} image ${index + 1}`}
-                className=" w-full h-full object-cover rounded-md"
-              />
-            </div>
-          ))}
-        </div>
+        <ListingGalleryEditor
+          label="Vehicle photos"
+          images={ride.rideImages ?? []}
+          onSave={async (keepImages, newFiles) => {
+            const result = await ListingImagesService.updateRideImages(
+              ride._id,
+              keepImages,
+              newFiles,
+            );
+            if (result) {
+              navigate(0);
+              return true;
+            }
+            return false;
+          }}
+        />
 
         {/* Details Section*/}
         <div className="px-8 pt-6 pb-6">
