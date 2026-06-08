@@ -4,8 +4,11 @@ import { AppModule } from './app.module';
 import { join } from 'path';
 import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import { WinstonLoggerService } from './common/utils/winston.logger';
+import compression from 'compression';
+
 async function bootstrap() {
   const app = await NestFactory.create<NestApplication>(AppModule);
+  app.use(compression());
   app.useLogger(app.get(WinstonLoggerService));
   app.enableCors({
     origin: '*',

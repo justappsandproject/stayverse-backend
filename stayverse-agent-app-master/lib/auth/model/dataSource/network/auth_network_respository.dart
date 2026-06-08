@@ -50,8 +50,9 @@ class AuthNetworkRepository {
   }
 
   Future<ServerResponse?> sendResetToken(String email) async {
+    final encodedEmail = Uri.encodeComponent(email);
     final result = await dio.get<DynamicMap>(
-        "${dio.options.baseUrl}${_AuthPath.forgetPassword}/$email");
+        "${dio.options.baseUrl}${_AuthPath.forgetPassword}/$encodedEmail");
 
     return result.data == null ? null : ServerResponse.fromJson(result.data!);
   }
@@ -65,8 +66,10 @@ class AuthNetworkRepository {
   }
 
   Future<ServerResponse?> sendToken(String email) async {
-    final result = await dio
-        .get<DynamicMap>("${dio.options.baseUrl}${_AuthPath.sendToken}/$email");
+    final result = await dio.post<DynamicMap>(
+      "${dio.options.baseUrl}${_AuthPath.sendToken}",
+      data: {'email': email},
+    );
 
     return result.data == null ? null : ServerResponse.fromJson(result.data!);
   }

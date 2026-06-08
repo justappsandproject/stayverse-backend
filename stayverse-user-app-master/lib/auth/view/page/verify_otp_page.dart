@@ -105,7 +105,7 @@ class _VerifyCodePageState extends ConsumerState<VerifyCodePage> {
                   _resendSms(coolDown);
                 },
                 child: Text(
-                  'Resend SMS',
+                  'Resend email',
                   style: TextStyle(
                     color: context.color.primary,
                     decoration: TextDecoration.underline,

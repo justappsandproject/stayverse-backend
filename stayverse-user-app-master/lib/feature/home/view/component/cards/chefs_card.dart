@@ -5,7 +5,7 @@ import 'package:stayverse/core/util/image/app_assets.dart';
 import 'package:stayverse/feature/apartmentDetails/view/component/apartment_favourite.dart';
 import 'package:stayverse/feature/chefDetails/controller/chef_details_controller.dart';
 import 'package:stayverse/feature/home/model/data/chef_response.dart';
-import 'package:stayverse/shared/image_loading_progress.dart';
+import 'package:stayverse/shared/stayverse_network_image.dart';
 
 class ChefsCard extends ConsumerStatefulWidget {
   final Chef? chef;
@@ -46,32 +46,14 @@ class _ChefsCardState extends ConsumerState<ChefsCard> {
                   topLeft: Radius.circular(8),
                   topRight: Radius.circular(8),
                 ),
-                child: Image.network(
-                  widget.chef?.coverPhoto ?? '',
+                child: StayverseNetworkImage(
+                  url: widget.chef?.coverPhoto,
+                  assetFallback: AppAsset.shortlet,
                   height: 70,
                   cacheHeight: 70.cacheSize(context),
                   width: 170,
                   cacheWidth: 170.cacheSize(context),
                   fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      height: 70,
-                      width: double.infinity,
-                      color: const Color.fromARGB(255, 61, 31, 31),
-                      child: LinearImageLoadingProgress(
-                        loadingProgress: loadingProgress,
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Image.asset(
-                      AppAsset.shortlet,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: 180,
-                    );
-                  },
                 ),
               ),
               if (widget.showFavourite)
@@ -106,39 +88,17 @@ class _ChefsCardState extends ConsumerState<ChefsCard> {
                       child: ClipRRect(
                         borderRadius:
                             const BorderRadius.all(Radius.circular(100)),
-                        child: Image.network(
-                          widget.chef?.profilePicture ?? '',
+                        child: StayverseNetworkImage(
+                          url: widget.chef?.profilePicture,
                           height: 100,
                           width: 100,
                           fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              height: 100,
-                              width: 100,
-                              padding: const EdgeInsets.all(10),
-                              color: Colors.grey.shade200,
-                              child: LinearImageLoadingProgress(
-                                loadingProgress: loadingProgress,
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              height: 90,
-                              color: Colors.grey.shade200,
-                              child: const Center(
-                                child: Icon(Icons.image_not_supported,
-                                    color: Colors.grey),
-                              ),
-                            );
-                          },
                         ),
                       ),
                     ),
                     const Gap(8),
                     Text(
-                      widget.chef?.fullName ?? "",
+                      widget.chef?.fullName ?? '',
                       maxLines: 1,
                       style: $styles.text.bodyBold.copyWith(
                         fontSize: 14,

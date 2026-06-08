@@ -7,7 +7,7 @@ import { formatDate, formatCurrency } from "@/lib/format.utils";
 import { ServiceStatus } from "@/types";
 import { AgentService } from "@/api/agent-service";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { dispatchAdminRefresh } from "@/lib/admin-refresh";
 import { ListingGalleryEditor } from "@/components/listings/listing-images-editor";
 import { ListingImagesService } from "@/api/listing-images-service";
 
@@ -15,7 +15,6 @@ export default function ApartmentDetailsModal() {
   const { open, setOpen, metadata } = useModalStore().apartmentDetails;
   const apartment: Apartment | null = metadata || null;
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const updateApartmentStatus = (id: string, status: ServiceStatus) => {
     setLoading(true);
@@ -23,7 +22,7 @@ export default function ApartmentDetailsModal() {
       .then((result) => {
         if (result) {
           setOpen(false);
-          navigate(0);
+          dispatchAdminRefresh("listings");
         }
       })
       .finally(() => {
@@ -65,7 +64,7 @@ export default function ApartmentDetailsModal() {
               newFiles,
             );
             if (result) {
-              navigate(0);
+              dispatchAdminRefresh("listings");
               return true;
             }
             return false;

@@ -5,7 +5,7 @@ import 'package:stayverse/core/extension/extension.dart';
 import 'package:stayverse/core/service/financial/money_service_v2.dart';
 import 'package:stayverse/core/util/location/location_privacy.dart';
 import 'package:stayverse/feature/home/model/data/apartment_response.dart';
-import 'package:stayverse/shared/image_loading_progress.dart';
+import 'package:stayverse/shared/stayverse_network_image.dart';
 
 class ApartmentCard extends StatelessWidget {
   final Apartment? apartment;
@@ -44,37 +44,17 @@ class ApartmentCard extends StatelessWidget {
               Stack(
                 children: [
                   ClipRRect(
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                      child: Image.network(
-                        apartment?.apartmentImages?.firstOrNull ??
-                            Constant.defaultApartmentImage,
-                        height: 140,
-                        width: 180,
-                        cacheHeight: 140.cacheSize(context),
-                        cacheWidth: 180.cacheSize(context),
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            height: 140,
-                            padding: const EdgeInsets.all(10),
-                            color: Colors.grey.shade200,
-                            child: LinearImageLoadingProgress(
-                              loadingProgress: loadingProgress,
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 140,
-                            color: Colors.grey.shade200,
-                            child: const Center(
-                              child: Icon(Icons.image_not_supported,
-                                  color: Colors.grey),
-                            ),
-                          );
-                        },
-                      )),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                    child: StayverseNetworkImage(
+                      url: apartment?.apartmentImages?.firstOrNull,
+                      fallbackUrl: Constant.defaultApartmentImage,
+                      height: 140,
+                      width: 180,
+                      cacheHeight: 140.cacheSize(context),
+                      cacheWidth: 180.cacheSize(context),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                   if (showFavourite)
                     Positioned(
                       top: 8,
@@ -83,7 +63,9 @@ class ApartmentCard extends StatelessWidget {
                         width: 24,
                         height: 24,
                         decoration: const BoxDecoration(
-                            shape: BoxShape.circle, color: Colors.white),
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
                         child: Icon(
                           (apartment?.isFavourite ?? false)
                               ? Icons.favorite

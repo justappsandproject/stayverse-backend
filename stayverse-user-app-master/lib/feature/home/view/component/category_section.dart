@@ -31,8 +31,25 @@ class _CategorySectionState extends ConsumerState<CategorySection>
   }
 
   void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
     _tabValueNotifier.value = _tabController.index;
     _updateSearchBarData(_tabValueNotifier.value);
+    _loadTabData(_tabController.index);
+  }
+
+  void _loadTabData(int index) {
+    final controller = ref.read(homeController.notifier);
+    switch (index) {
+      case 0:
+        controller.loadApartmentTab();
+        break;
+      case 1:
+        controller.loadRideTab();
+        break;
+      case 2:
+        controller.loadChefTab();
+        break;
+    }
   }
 
   _updateSearchBarData(int index) {

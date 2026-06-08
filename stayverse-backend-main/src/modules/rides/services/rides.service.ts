@@ -35,9 +35,10 @@ export class RidesService {
 
     private withNormalizedImages<T extends { rideImages?: string[] }>(doc: T): T {
         if (!doc) return doc;
+        const images = normalizeMediaUrls(doc.rideImages, this.cdnBase);
         return {
             ...doc,
-            rideImages: normalizeMediaUrls(doc.rideImages, this.cdnBase),
+            rideImages: images?.length ? [images[0]] : [],
         };
     }
 
@@ -75,9 +76,10 @@ export class RidesService {
         const [items, total] = await Promise.all([
             this.rideModel
                 .find(filter)
+                .select('rideName pricePerHour averageRating rideType rideImages address agentId status createdAt location')
                 .populate({
                     path: 'agent',
-                    select: '-balance -__v -createdAt -updatedAt',
+                    select: 'userId serviceType',
                     populate: { path: 'user', select: 'firstname lastname email phoneNumber' }
                 })
                 .sort({ createdAt: -1 })

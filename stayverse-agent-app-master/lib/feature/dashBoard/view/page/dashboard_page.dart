@@ -21,9 +21,12 @@ class _DashBoardPageState extends ConsumerState<DashBoardPage> {
   @override
   void initState() {
     Future.microtask(() {
-      StreamClientService.instance.connect();
-      StreamClientService.instance.pushToken();
-      BrimPusher.pushToken();
+      Future.delayed(const Duration(seconds: 2), () {
+        if (!mounted) return;
+        StreamClientService.instance.connect();
+        StreamClientService.instance.pushToken();
+        BrimPusher.pushToken();
+      });
     });
     super.initState();
   }

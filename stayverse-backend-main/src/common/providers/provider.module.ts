@@ -26,6 +26,9 @@ import { DOUploadService } from "./digiital-ocean.service";
               user: configService.get<string>("mail.user"),
               pass: configService.get<string>("mail.pass"),
             },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 20000,
             ...(port === 587 ? { requireTLS: true } : {}),
           },
           defaults: {

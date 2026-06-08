@@ -109,6 +109,7 @@ export class ChefService {
 
     const [list, total] = await Promise.all([
       this.chefModel.find(filter)
+        .select('fullName pricingPerHour averageRating profilePicture culinarySpecialties address status createdAt agentId location')
         .populate({
           path: 'agent',
           select: '-balance -__v -createdAt -updatedAt',
@@ -117,9 +118,6 @@ export class ChefService {
             select: 'firstname lastname email phoneNumber'
           }
         })
-        .populate('experiences')
-        .populate('certifications')
-        .populate('features')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -383,11 +381,31 @@ export class ChefService {
     const chefIds = paginationResult.data.map((chef: any) => chef._id);
     const agentIds = paginationResult.data.map((chef: any) => chef.agent?._id);
 
-    const [experiences, certifications, features, bookings, withdrawals, totalCount, activeCount] = await Promise.all([
-      this.experienceModel.find({ chefId: { $in: chefIds } }).lean().exec(),
-      this.certificationModel.find({ chefId: { $in: chefIds } }).lean().exec(),
-      this.featureModel.find({ chefId: { $in: chefIds } }).lean().exec(),
-      this.bookingModel.find({ chefId: { $in: chefIds } }).lean().exec(),
+    const [experiences, certifications, features, bookingStats, withdrawals, totalCount, activeCount] = await Promise.all([
+      this.experienceModel.find({ chefId: { $in: chefIds } }).select('chefId title company').lean().exec(),
+      this.certificationModel.find({ chefId: { $in: chefIds } }).select('chefId name issuer').lean().exec(),
+      this.featureModel.find({ chefId: { $in: chefIds } }).select('chefId name').lean().exec(),
+      this.bookingModel.aggregate([
+        { $match: { chefId: { $in: chefIds } } },
+        {
+          $group: {
+            _id: '$chefId',
+            total: { $sum: 1 },
+            completed: {
+              $sum: { $cond: [{ $eq: ['$status', BookingStatus.COMPLETED] }, 1, 0] },
+            },
+            earnings: {
+              $sum: {
+                $cond: [
+                  { $eq: ['$status', BookingStatus.COMPLETED] },
+                  { $ifNull: ['$totalPrice', 0] },
+                  0,
+                ],
+              },
+            },
+          },
+        },
+      ]),
       this.txModel.find({
         userId: { $in: agentIds },
         type: TransactionType.DEBIT,
@@ -412,14 +430,13 @@ export class ChefService {
       new Map<string, any[]>()
     );
 
-    const bookingsMap = bookings.reduce((map, booking) => {
-      const chefId = booking.chefId.toString();
-      if (!map.has(chefId)) map.set(chefId, { total: 0, completed: 0, earnings: 0 });
-      const stats = map.get(chefId)!;
-      stats.total += 1;
-      if (booking.status === BookingStatus.COMPLETED) stats.completed += 1;
-      stats.earnings += booking.totalPrice || 0;
-      map.set(chefId, stats);
+    const bookingsMap = bookingStats.reduce((map, stat) => {
+      const chefId = stat._id.toString();
+      map.set(chefId, {
+        total: stat.total,
+        completed: stat.completed,
+        earnings: stat.earnings,
+      });
       return map;
     }, new Map<string, { total: number; completed: number; earnings: number }>());
 
@@ -469,14 +486,12 @@ export class ChefService {
 
     const [list, total] = await Promise.all([
       this.chefModel.find(filter)
+        .select('fullName pricingPerHour averageRating profilePicture culinarySpecialties address status createdAt agentId location')
         .populate({
           path: 'agent',
           select: '-balance -__v -createdAt -updatedAt',
           populate: { path: 'user', select: 'firstname lastname email phoneNumber' }
         })
-        .populate('experiences')
-        .populate('certifications')
-        .populate('features')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -556,14 +571,12 @@ export class ChefService {
 
     const [list, total] = await Promise.all([
       this.chefModel.find(filter)
+        .select('fullName pricingPerHour averageRating profilePicture culinarySpecialties address status createdAt agentId location')
         .populate({
           path: 'agent',
           select: '-balance -__v -createdAt -updatedAt',
           populate: { path: 'user', select: 'firstname lastname email phoneNumber' },
         })
-        .populate('experiences')
-        .populate('certifications')
-        .populate('features')
         .skip(skip)
         .limit(limit)
         .lean({ virtuals: true }),
@@ -644,14 +657,12 @@ export class ChefService {
 
     const [list, total] = await Promise.all([
       this.chefModel.find(filter)
+        .select('fullName pricingPerHour averageRating profilePicture culinarySpecialties address status createdAt agentId location')
         .populate({
           path: 'agent',
           select: '-balance -__v -createdAt -updatedAt',
           populate: { path: 'user', select: 'firstname lastname email phoneNumber' }
         })
-        .populate('experiences')
-        .populate('certifications')
-        .populate('features')
         .skip(skip)
         .limit(l)
         .lean({ virtuals: true })

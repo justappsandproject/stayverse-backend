@@ -19,14 +19,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     Future.microtask(() {
-
-      ref.read(homeController.notifier).getApartmentRecommendations();
-      ref.read(homeController.notifier).getChefRecommendations();
-      ref.read(homeController.notifier).getRideRecommendations();
-      ref.read(homeController.notifier).getNewlyListedApartment();
-      ref.read(homeController.notifier).getNewlyListedChef();
-      ref.read(homeController.notifier).getNewlyListedRide();
-      
+      ref.read(homeController.notifier).loadApartmentTab();
     });
     super.initState();
   }

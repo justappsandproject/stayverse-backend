@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:stayvers_agent/core/data/server_respond.dart';
+import 'package:stayvers_agent/core/service/brimAuth/brim_auth.dart';
 import 'package:stayvers_agent/core/data/typedefs.dart';
 import 'package:stayvers_agent/core/util/app/logger.dart';
 import 'package:stayvers_agent/feature/discover/model/data/booking_status_request.dart';
@@ -19,16 +20,24 @@ class DiscoverNetworkRepository {
   final Dio dio;
 
   Future<ServerResponse?> getOverviewMetrics() async {
-    final result = await dio
-        .get<DynamicMap>("${dio.options.baseUrl}${_DiscoverPath.getMetrics}");
+    final agentId = BrimAuth.curentUser()?.agent?.id;
+    if (agentId == null || agentId.isEmpty) return null;
+
+    final result = await dio.get<DynamicMap>(
+      "${dio.options.baseUrl}/agents/metrics/$agentId",
+    );
     return result.data == null ? null : ServerResponse.fromJson(result.data!);
   }
 
-  Future<ServerResponse?> getAgentBookings( BookingStatus status,
+  Future<ServerResponse?> getAgentBookings(BookingStatus status,
       {required int limit, required int page}) async {
     final result = await dio.get<DynamicMap>(
         "${dio.options.baseUrl}${_DiscoverPath.getBookings}",
-        queryParameters: {"status": status.name,"limit": limit, "page": page});
+        queryParameters: {
+          "status": status.name,
+          "limit": limit,
+          "page": page,
+        });
     return result.data == null ? null : ServerResponse.fromJson(result.data!);
   }
 

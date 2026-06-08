@@ -50,9 +50,10 @@ export class ApartmentService {
 
   private withNormalizedImages<T extends { apartmentImages?: string[] }>(doc: T): T {
     if (!doc) return doc;
+    const images = normalizeMediaUrls(doc.apartmentImages, this.cdnBase);
     return {
       ...doc,
-      apartmentImages: normalizeMediaUrls(doc.apartmentImages, this.cdnBase),
+      apartmentImages: images?.length ? [images[0]] : [],
     };
   }
 
@@ -281,6 +282,8 @@ export class ApartmentService {
       filter,
       params: { page, limit },
       sort,
+      select:
+        'apartmentName pricePerDay averageRating apartmentType numberOfBedrooms address apartmentImages agentId status createdAt location amenities',
       populate: [
         {
           path: "agent", select: "userId serviceType"

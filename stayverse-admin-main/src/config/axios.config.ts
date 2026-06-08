@@ -14,6 +14,7 @@ export const API_URL =
 
 export const axiosInstance = axios.create({
     baseURL: API_URL,
+    timeout: 30000,
     validateStatus: (status) => status < 500,
 });
 

@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { AdminImage } from "@/components/AdminImage";
 import { ServiceStatus } from "@/types";
 import { Apartment } from "@/types/apartment";
 import { Ride } from "@/types/ride";
@@ -22,6 +22,7 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
+import { listenAdminRefresh } from "@/lib/admin-refresh";
 import { useCallback, useEffect, useState } from "react";
 import { formatCurrency } from "@/lib/format.utils";
 import useModalStore from "@/stores/modal.store";
@@ -77,6 +78,14 @@ export default function ManageListings() {
 
   useEffect(() => {
     fetchItems();
+  }, [fetchItems]);
+
+  useEffect(() => {
+    return listenAdminRefresh((scope) => {
+      if (!scope || scope === "listings") {
+        fetchItems();
+      }
+    });
   }, [fetchItems]);
 
   const handleStatusUpdate = async (id: string, newStatus: string) => {
@@ -233,18 +242,20 @@ export default function ManageListings() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-10 rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
                           {activeTab === "apartments" ? (
-                            <img
+                            <AdminImage
                               src={(item as Apartment).apartmentImages?.[0]}
                               className="w-full h-full object-cover"
                               alt="listing"
-                              onError={(e) => (e.currentTarget.src = "")}
+                              width={48}
+                              height={40}
                             />
                           ) : (
-                            <img
+                            <AdminImage
                               src={(item as Ride).rideImages?.[0]}
                               className="w-full h-full object-cover"
                               alt="listing"
-                              onError={(e) => (e.currentTarget.src = "")}
+                              width={48}
+                              height={40}
                             />
                           )}
                         </div>

@@ -118,11 +118,18 @@ export class AgentService {
       createAgentDto.firstname,
       EmailType.EMAIL_VERIFICATION,
     );
-    if (response.status) {
-      newUser.otp = response.otp;
-      newUser.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
-      await newUser.save();
+    if (!response.status) {
+      await this.agentModel.deleteOne({ _id: newAgent._id });
+      await this.userModel.deleteOne({ _id: newUser._id });
+      throw new InternalServerErrorException(
+        'Unable to send verification email. Please check your email address and try again.',
+      );
     }
+
+    newUser.otp = response.otp;
+    newUser.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
+    await newUser.save();
+
     return { message: 'Agent created successfully', chatToken };
   }
 
@@ -225,11 +232,16 @@ export class AgentService {
       EmailType.RESET_PASSWORD,
     );
 
-    if (response.status) {
-      user.otp = response.otp;
-      user.pinExpires = dayjs().tz(TIMEZONE).add(10, 'minute').toDate();
-      await user.save();
+    if (!response.status) {
+      throw new InternalServerErrorException(
+        'Failed to send password reset email. Please try again later.',
+      );
     }
+
+    user.otp = response.otp;
+    user.pinExpires = dayjs().tz(TIMEZONE).add(10, 'minute').toDate();
+    await user.save();
+
     return 'Reset password OTP sent successfully';
   }
 
@@ -311,7 +323,7 @@ export class AgentService {
 
     const agentIds = paginationResult.data.map((a: any) => a._id);
 
-    const [totalBookings, completedBookings, completedDocs] = await Promise.all([
+    const [totalBookings, completedBookings, earningsByAgent] = await Promise.all([
       this.bookingModel.aggregate([
         { $match: { agentId: { $in: agentIds } } },
         { $group: { _id: '$agentId', count: { $sum: 1 } } },
@@ -320,19 +332,17 @@ export class AgentService {
         { $match: { agentId: { $in: agentIds }, status: BookingStatus.COMPLETED } },
         { $group: { _id: '$agentId', count: { $sum: 1 } } },
       ]),
-      this.bookingModel
-        .find({ agentId: { $in: agentIds }, status: BookingStatus.COMPLETED })
-        .lean(),
+      this.bookingModel.aggregate([
+        { $match: { agentId: { $in: agentIds }, status: BookingStatus.COMPLETED } },
+        { $group: { _id: '$agentId', totalEarnings: { $sum: { $ifNull: ['$totalPrice', 0] } } } },
+      ]),
     ]);
 
     const totalMap = new Map(totalBookings.map(x => [x._id.toString(), x.count]));
     const completedMap = new Map(completedBookings.map(x => [x._id.toString(), x.count]));
-    const earningMap = new Map<string, number>();
-
-    completedDocs.forEach(b => {
-      const id = b.agentId.toString();
-      earningMap.set(id, (earningMap.get(id) || 0) + (b.totalPrice || 0));
-    });
+    const earningMap = new Map(
+      earningsByAgent.map((x) => [x._id.toString(), x.totalEarnings || 0]),
+    );
 
     paginationResult.data.forEach((agent: any) => {
       const id = agent._id.toString();

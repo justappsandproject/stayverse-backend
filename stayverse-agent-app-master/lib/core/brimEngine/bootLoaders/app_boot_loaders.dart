@@ -35,14 +35,8 @@ class AppBootLoaders extends BrimBootLoader {
   }
 
   Future<void> navigate() async {
-    await _fakeDelay();
-
-    String route = BrimStorage.instance.read(Env.screenStorageScreen) ??
+    final route = BrimStorage.instance.read(Env.screenStorageScreen) ??
         OnboardingScreen.route;
     $navigate.clearAllTo(route);
-  }
-
-  Future<void> _fakeDelay() async {
-    await Future.delayed(const Duration(seconds: 2));
   }
 }

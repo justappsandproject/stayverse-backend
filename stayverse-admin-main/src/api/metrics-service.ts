@@ -1,5 +1,6 @@
 import { axiosInstance } from "@/config/axios.config";
 import { readMetricsCache, writeMetricsCache } from "@/lib/metrics-cache";
+import { notifyMetricsListeners } from "@/lib/metrics-listeners";
 import { toast } from "sonner";
 
 export interface DashboardMetrics {
@@ -26,6 +27,7 @@ async function fetchFromApi(silent = false): Promise<DashboardMetrics> {
     if (status === 200 && data?.data) {
       const metrics = data.data as DashboardMetrics;
       writeMetricsCache(metrics);
+      notifyMetricsListeners(metrics);
       return metrics;
     }
     if (!silent) {

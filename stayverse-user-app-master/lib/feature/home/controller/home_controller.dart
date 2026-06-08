@@ -21,7 +21,27 @@ class HomeController extends StateNotifier<HomeUiState>
 
   final HomeNetworkService _homeNetworkService;
 
-  Future<void> getNewlyListedApartment() async {
+  Future<void> loadApartmentTab() async {
+    await Future.wait([
+      getApartmentRecommendations(),
+      getNewlyListedApartment(),
+    ]);
+  }
+
+  Future<void> loadRideTab() async {
+    await Future.wait([
+      getRideRecommendations(),
+      getNewlyListedRide(),
+    ]);
+  }
+
+  Future<void> loadChefTab() async {
+    await Future.wait([
+      getChefRecommendations(),
+      getNewlyListedChef(),
+    ]);
+  }
+
     state = state.copyWith(isLoadingNewlyListedApartments: true);
 
     try {

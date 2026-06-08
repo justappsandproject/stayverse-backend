@@ -33,20 +33,45 @@ class _RideDiscoverPageState extends ConsumerState<RideDiscoverPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       refresh();
     });
+  }
+
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    _loadBookingsForTab(_tabController.index);
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> refresh() async {
     await Future.wait([
       ref.read(overviewController.notifier).getOverviewMetrics(),
       ref.read(bookingController.notifier).getBookings(BookingStatus.pending),
-      ref.read(bookingController.notifier).getBookings(BookingStatus.completed),
-      ref.read(bookingController.notifier).getBookings(BookingStatus.accepted),
-      ref.read(bookingController.notifier).getBookings(BookingStatus.rejected),
       ref.read(dashboadController.notifier).refreshUser(),
     ]);
+  }
+
+  Future<void> _loadBookingsForTab(int index) async {
+    final bookingController = ref.read(bookingController.notifier);
+    switch (index) {
+      case 0:
+        await bookingController.getBookings(BookingStatus.pending);
+        break;
+      case 1:
+        await bookingController.getBookings(BookingStatus.accepted);
+        break;
+      case 2:
+        await bookingController.getBookings(BookingStatus.completed);
+        break;
+    }
   }
 
   void _onPeriodSelected(String period) {

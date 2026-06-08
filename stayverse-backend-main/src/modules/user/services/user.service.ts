@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -69,12 +69,23 @@ export class UserService {
 
     await newUser.save();
 
-    const response = await this.otpService.sendEmailMessage(createUserDto.email, createUserDto.firstname, EmailType.EMAIL_VERIFICATION);
-    if (response.status) {
-      newUser.otp = response.otp;
-      newUser.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
-      await newUser.save();
+    const response = await this.otpService.sendEmailMessage(
+      createUserDto.email,
+      createUserDto.firstname,
+      EmailType.EMAIL_VERIFICATION,
+    );
+    if (!response.status) {
+      await this.userModel.deleteOne({ _id: newUser._id });
+      this.logger.error(`Verification email failed for ${createUserDto.email}`);
+      throw new InternalServerErrorException(
+        'Unable to send verification email. Please check your email address and try again.',
+      );
     }
+
+    newUser.otp = response.otp;
+    newUser.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
+    await newUser.save();
+
     const chatToken = this.streamClient.createToken(newUser._id.toString())
     return { message: 'User created successfully', chatToken };
   }
@@ -99,10 +110,12 @@ export class UserService {
         user.firstname,
         EmailType.EMAIL_VERIFICATION,
       );
-      if (response) {
+      if (response.status) {
         user.otp = response.otp;
         user.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
         await user.save();
+      } else {
+        this.logger.warn(`Failed to resend verification email to ${user.email}`);
       }
       return {
         access_token: null,
@@ -205,11 +218,15 @@ export class UserService {
     if (!user) throw new BadRequestException('User not found!');
 
     const response = await this.otpService.sendEmailMessage(user.email, user.firstname, EmailType.RESET_PASSWORD);
-    if (response.status) {
-      user.otp = response.otp;
-      user.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
-      await user.save();
+    if (!response.status) {
+      throw new InternalServerErrorException(
+        'Failed to send password reset email. Please try again later.',
+      );
     }
+
+    user.otp = response.otp;
+    user.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
+    await user.save();
 
     return 'OTP sent successfully';
   }
@@ -239,15 +256,22 @@ export class UserService {
     if (!user) throw new BadRequestException('User with this email not found!');
     if (user.isEmailVerified) throw new BadRequestException('User is already verified.');
 
-    const response = await this.otpService.sendEmailMessage(email, user.firstname, EmailType.EMAIL_VERIFICATION);
-    if (response) {
-      user.otp = response.otp;
-      user.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
-      await user.save();
-      return true;
+    const response = await this.otpService.sendEmailMessage(
+      email,
+      user.firstname,
+      EmailType.EMAIL_VERIFICATION,
+    );
+    if (!response.status) {
+      this.logger.error(`Failed to resend verification email to ${email}`);
+      throw new InternalServerErrorException(
+        'Failed to send verification email. Please try again later.',
+      );
     }
 
-    return false;
+    user.otp = response.otp;
+    user.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
+    await user.save();
+    return true;
   }
 
   async updatePassword(userId: string, oldPassword: string, newPassword: string) {

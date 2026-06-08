@@ -8,13 +8,12 @@ import { ChefService } from "@/api/chef-service";
 import { useState } from "react";
 import { ChefPhotosEditor } from "@/components/listings/listing-images-editor";
 import { ListingImagesService } from "@/api/listing-images-service";
-import { useNavigate } from "react-router-dom";
+import { dispatchAdminRefresh } from "@/lib/admin-refresh";
 
 export function ChefProfileModal() {
   const { open, setOpen, metadata } = useModalStore().chefProfileModal;
   const chefProfile: Chef | null = metadata?.chef || null;
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   if (!chefProfile) {
     return (
@@ -76,7 +75,7 @@ export function ChefProfileModal() {
           onSave={async (files) => {
             const result = await ListingImagesService.updateChefImages(chefProfile._id, files);
             if (result) {
-              navigate(0);
+              dispatchAdminRefresh("chefs");
               return true;
             }
             return false;

@@ -17,6 +17,7 @@ import {
   MetricsService,
   type DashboardMetrics,
 } from "@/api/metrics-service";
+import { subscribeMetrics } from "@/lib/metrics-listeners";
 
 function mapMetricsToCards(data: DashboardMetrics) {
   return [
@@ -62,8 +63,15 @@ export default function Dashboard() {
       setMetricsLoading(false);
     });
 
+    const unsubscribe = subscribeMetrics((data) => {
+      if (cancelled) return;
+      setMetricsData(mapMetricsToCards(data));
+      setMetricsLoading(false);
+    });
+
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, []);
 
@@ -97,7 +105,8 @@ export default function Dashboard() {
   ]);
 
   useEffect(() => {
-    fetchUsers();
+    const idleId = window.setTimeout(() => fetchUsers(), 400);
+    return () => window.clearTimeout(idleId);
   }, [fetchUsers]);
 
   const handleApproveUser = async (userId: string) => {

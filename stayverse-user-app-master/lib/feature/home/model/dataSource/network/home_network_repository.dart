@@ -25,6 +25,7 @@ class HomeNetworkRepository {
       ServiceType serviceType, LatLng latLng) async {
     final result = await dio.get<DynamicMap>(
       "${dio.options.baseUrl}${_HomePath.listings(serviceType)}",
+      queryParameters: const {'limit': 8, 'page': 1},
     );
 
     return result.data == null ? null : ServerResponse.fromJson(result.data!);
@@ -49,6 +50,7 @@ class HomeNetworkRepository {
   Future<ServerResponse?> getNewlyListed(ServiceType serviceType) async {
     final result = await dio.get<DynamicMap>(
       "${dio.options.baseUrl}${_HomePath.newlyListed(serviceType)}",
+      queryParameters: const {'limit': 8, 'page': 1},
     );
 
     return result.data == null ? null : ServerResponse.fromJson(result.data!);

@@ -4,7 +4,7 @@ import 'package:stayverse/core/config/constant.dart';
 import 'package:stayverse/core/extension/extension.dart';
 import 'package:stayverse/core/service/financial/money_service_v2.dart';
 import 'package:stayverse/feature/home/model/data/ride_response.dart';
-import 'package:stayverse/shared/image_loading_progress.dart';
+import 'package:stayverse/shared/stayverse_network_image.dart';
 
 class RideCard extends StatelessWidget {
   final Ride? ride;
@@ -43,37 +43,17 @@ class RideCard extends StatelessWidget {
               Stack(
                 children: [
                   ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        ride?.rideImages?.firstOrNull ??
-                            Constant.defaultApartmentImage,
-                        height: 140,
-                        width: 180,
-                        cacheHeight: 140.cacheSize(context),
-                        cacheWidth: 180.cacheSize(context),
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            height: 140,
-                            padding: const EdgeInsets.all(10),
-                            color: Colors.grey.shade200,
-                            child: LinearImageLoadingProgress(
-                              loadingProgress: loadingProgress,
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 140,
-                            color: Colors.grey.shade200,
-                            child: const Center(
-                              child: Icon(Icons.image_not_supported,
-                                  color: Colors.grey),
-                            ),
-                          );
-                        },
-                      )),
+                    borderRadius: BorderRadius.circular(8),
+                    child: StayverseNetworkImage(
+                      url: ride?.rideImages?.firstOrNull,
+                      fallbackUrl: Constant.defaultApartmentImage,
+                      height: 140,
+                      width: 180,
+                      cacheHeight: 140.cacheSize(context),
+                      cacheWidth: 180.cacheSize(context),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                   if (showFavourite)
                     Positioned(
                       top: 8,

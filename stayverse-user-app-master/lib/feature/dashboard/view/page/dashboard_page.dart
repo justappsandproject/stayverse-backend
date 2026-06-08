@@ -22,11 +22,14 @@ class _DashbBoardScreenPageState extends ConsumerState<DashbBoardScreenPage> {
   @override
   void initState() {
     Future.microtask(() {
-      StreamClientService.instance.connect();
-      StreamClientService.instance.pushToken();
-      BrimPusher.pushToken();
       ref.read(dashboadController.notifier).refreshUser();
       _requestForPermission();
+      Future.delayed(const Duration(seconds: 2), () {
+        if (!mounted) return;
+        StreamClientService.instance.connect();
+        StreamClientService.instance.pushToken();
+        BrimPusher.pushToken();
+      });
     });
     super.initState();
   }

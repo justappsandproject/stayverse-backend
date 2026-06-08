@@ -57,38 +57,42 @@ void injectDependency() {
       requestBody: false,
     ))
     ..registerSingleton<Dio>(Dio())
-    ..registerLazySingleton<BrimDeviceInfo>(() => BrimDeviceInfo())
+    ..registerLazySingleton<BrimDeviceInfo>(() => BrimDeviceInfo());
+
+  configureDio(locator<Dio>());
+
+  locator
     ..registerSingleton<AuthNetworkRepository>(
-        AuthNetworkRepository(dio: dioConfig()))
+        AuthNetworkRepository(dio: locator<Dio>()))
     ..registerSingleton<AuthNetworkService>(AuthNetworkService(locator.get()))
     ..registerSingleton<HomeNetworkRepository>(
-        HomeNetworkRepository(dio: dioConfig()))
+        HomeNetworkRepository(dio: locator<Dio>()))
     ..registerSingleton<HomeNetworkService>(HomeNetworkService(locator.get()))
     ..registerSingleton<FavouriteNetworkRepository>(
-        FavouriteNetworkRepository(dio: dioConfig()))
+        FavouriteNetworkRepository(dio: locator<Dio>()))
     ..registerSingleton<FavouriteNetworkService>(
         FavouriteNetworkService(locator.get()))
     ..registerSingleton<ProfileNetworkRepository>(
-        ProfileNetworkRepository(dio: dioConfig()))
+        ProfileNetworkRepository(dio: locator<Dio>()))
     ..registerSingleton<ProfileNetworkService>(
         ProfileNetworkService(locator.get()))
     ..registerSingleton<ApartmentDetailsRepository>(
-        ApartmentDetailsRepository(dio: dioConfig()))
+        ApartmentDetailsRepository(dio: locator<Dio>()))
     ..registerSingleton<AparmentDetailsNetworkService>(
         AparmentDetailsNetworkService(locator.get()))
     ..registerSingleton<SearchNetworkRepository>(
-        SearchNetworkRepository(dio: dioConfig()))
+        SearchNetworkRepository(dio: locator<Dio>()))
     ..registerSingleton<SearchNetworkService>(
         SearchNetworkService(locator.get()))
     ..registerSingleton<BookingNetworkRepository>(
-        BookingNetworkRepository(dio: dioConfig()))
+        BookingNetworkRepository(dio: locator<Dio>()))
     ..registerSingleton<BookingNetworkService>(
         BookingNetworkService(locator.get()))
     ..registerSingleton<DashNetworkRepository>(
-        DashNetworkRepository(dio: dioConfig()))
+        DashNetworkRepository(dio: locator<Dio>()))
     ..registerSingleton<DashNetworkService>(DashNetworkService(locator.get()))
     ..registerSingleton<WalletNetworkRepository>(
-        WalletNetworkRepository(dio: dioConfig()))
+        WalletNetworkRepository(dio: locator<Dio>()))
     ..registerSingleton<WalletNetworkService>(
         WalletNetworkService(locator.get()));
 }
@@ -104,16 +108,16 @@ BrimStorage get $brimStorage => BrimStorage.instance;
 
 NavigationService get $navigate => locator.get<NavigationService>();
 
-Dio dioConfig() {
-  Dio dio = locator<Dio>()
+void configureDio(Dio dio) {
+  if (dio.interceptors.isNotEmpty) return;
+
+  dio
     ..interceptors.add(locator<PrettyDioLogger>())
     ..interceptors.add(locator<ContentTypeInterceptor>())
     ..interceptors.add(locator<BearerTokenInterceptor>())
     ..interceptors.add(locator<UserAgentInterceptor>())
     ..options.baseUrl = Constant.host
-    ..options.receiveTimeout = const Duration(seconds: 60)
-    ..options.connectTimeout = const Duration(seconds: 60)
-    ..options.sendTimeout = const Duration(seconds: 60);
-
-  return dio;
+    ..options.receiveTimeout = const Duration(seconds: 30)
+    ..options.connectTimeout = const Duration(seconds: 15)
+    ..options.sendTimeout = const Duration(seconds: 30);
 }

@@ -5,6 +5,7 @@ import { AgentService } from '../services/agent.service';
 import { CreateAgentDto, LoginAgentDto, ForgotPasswordResetDto } from '../dto/agent.dto';
 import { UpdateDeviceTokenAndNotificationDto, UpdatePasswordDto, UpdateProfilePicture, UpdateUserDto, VerifyNinSelfieDto, DeleteAccountDto } from 'src/modules/user/dto/user.dto';
 import { VerifyEmailTokenDto } from '../../../common/dtos/verify-email-token.dto';
+import { ResendVerificationEmailDto } from '../../../common/dtos/resend-verification-email.dto';
 import { Role, RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/constants/enum';
 import { FilterAgentsDto } from '../dto/filter-agents.dto';
@@ -70,20 +71,29 @@ export class AgentController {
     }
 
     @Public()
-    @Get('send-token/:email')
+    @Post('send-token')
     @ApiOperation({ summary: 'Resend verification token', description: 'Sends a new OTP to the agent\'s email address.' })
+    @ApiBody({ type: ResendVerificationEmailDto })
+    @ApiResponse({ status: 200, description: 'OTP sent successfully', example: { message: 'Verification pin sent successfully.' } })
+    async sendTokenPost(@Body() dto: ResendVerificationEmailDto) {
+        return this.resendVerificationToken(dto.email);
+    }
+
+    @Public()
+    @Get('send-token/:email')
+    @ApiOperation({ summary: 'Resend verification token (legacy)', description: 'Sends a new OTP to the agent\'s email address.' })
     @ApiResponse({ status: 200, description: 'OTP sent successfully', example: { message: 'Verification pin sent successfully.' } })
     async sendToken(@Param('email') email: string) {
+        return this.resendVerificationToken(email);
+    }
+
+    private async resendVerificationToken(email: string) {
         if (!this.isValidEmail(email)) {
             throw new BadRequestException('Invalid email format.');
         }
 
-        const done = await this.agentService.resendVerificationPin(email);
-        if (done) {
-            return { message: 'Verification pin sent successfully.' };
-        } else {
-            throw new BadRequestException('Something went wrong. Please retry...');
-        }
+        await this.agentService.resendVerificationPin(email);
+        return { message: 'Verification pin sent successfully.' };
     }
     @Role(Roles.AGENT)
     @ApiBearerAuth()

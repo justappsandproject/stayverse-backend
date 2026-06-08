@@ -6,7 +6,7 @@ import { Ride } from "@/types/ride";
 import { ServiceStatus } from "@/types";
 import { AgentService } from "@/api/agent-service";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { dispatchAdminRefresh } from "@/lib/admin-refresh";
 import { formatCurrency } from "@/lib/format.utils";
 import { ListingGalleryEditor } from "@/components/listings/listing-images-editor";
 import { ListingImagesService } from "@/api/listing-images-service";
@@ -15,7 +15,6 @@ export default function RideDetailsModal() {
   const { open, setOpen, metadata } = useModalStore().rideDetails;
   const ride: Ride | null = metadata || null;
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const updateRideStatus = (id: string, status: ServiceStatus) => {
     setLoading(true);
@@ -23,7 +22,7 @@ export default function RideDetailsModal() {
       .then((result) => {
         if (result) {
           setOpen(false);
-          navigate(0);
+          dispatchAdminRefresh("listings");
         }
       })
       .finally(() => {
@@ -70,7 +69,7 @@ export default function RideDetailsModal() {
               newFiles,
             );
             if (result) {
-              navigate(0);
+              dispatchAdminRefresh("listings");
               return true;
             }
             return false;

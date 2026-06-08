@@ -32,9 +32,11 @@ class _DiscoverChefPageState extends ConsumerState<DiscoverChefPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(overviewController.notifier).getOverviewMetrics();
-      ref.read(chefController.notifier).getChefStatus();
-      ref.read(dashboadController.notifier).refreshUser();
+      Future.wait([
+        ref.read(overviewController.notifier).getOverviewMetrics(),
+        ref.read(chefController.notifier).getChefStatus(),
+        ref.read(dashboadController.notifier).refreshUser(),
+      ]);
     });
   }
 

@@ -39,6 +39,7 @@ import {
   VerifyNinSelfieDto,
 } from '../dto/user.dto';
 import { VerifyEmailTokenDto } from '../../../common/dtos/verify-email-token.dto';
+import { ResendVerificationEmailDto } from '../../../common/dtos/resend-verification-email.dto';
 import { Role, RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/constants/enum';
 import { FilterUsersDto } from '../dto/filter-users.dto';
@@ -207,8 +208,21 @@ export class UserController {
   }
 
   @Public()
-  @Get('send-token/:email')
+  @Post('send-token')
   @ApiOperation({ summary: 'Resend verification token' })
+  @ApiBody({ type: ResendVerificationEmailDto })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP sent successfully',
+    example: { message: 'Verification pin sent successfully.' },
+  })
+  async sendTokenPost(@Body() dto: ResendVerificationEmailDto) {
+    return this.resendVerificationToken(dto.email);
+  }
+
+  @Public()
+  @Get('send-token/:email')
+  @ApiOperation({ summary: 'Resend verification token (legacy)' })
   @ApiParam({
     name: 'email',
     required: true,
@@ -220,16 +234,15 @@ export class UserController {
     example: { message: 'Verification pin sent successfully.' },
   })
   async sendToken(@Param('email') email: string) {
+    return this.resendVerificationToken(email);
+  }
+
+  private async resendVerificationToken(email: string) {
     if (!this.isValidEmail(email)) {
       throw new BadRequestException('Invalid email format.');
     }
 
-    const result = await this.usersService.resendVerificationPin(email);
-
-    if (!result) {
-      throw new BadRequestException('Something went wrong. Please retry...');
-    }
-
+    await this.usersService.resendVerificationPin(email);
     return { message: 'Verification pin sent successfully.' };
   }
 

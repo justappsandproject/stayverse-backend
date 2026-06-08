@@ -1,7 +1,8 @@
 import 'package:dart_extensions/dart_extensions.dart';
 import 'package:stayverse/core/commonLibs/common_libs.dart';
 import 'package:stayverse/core/util/image/app_assets.dart';
-import 'package:stayverse/shared/image_loading_progress.dart';
+import 'package:stayverse/core/util/media/media_url.dart';
+import 'package:stayverse/shared/stayverse_network_image.dart';
 import 'package:stayverse/shared/viewMutipleImage/model/view_mutiple_image_data.dart';
 import 'package:stayverse/shared/viewMutipleImage/view/view_mutiple_image.dart';
 
@@ -17,45 +18,33 @@ class ApartmentImages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resolvedImages = apartmentImages
+        .map((url) => MediaUrl.resolve(url) ?? url)
+        .where((url) => url.isNotEmpty)
+        .toList();
+
     return PageView.builder(
       controller: _pageController,
-      itemCount: apartmentImages.length,
+      itemCount: resolvedImages.length,
       itemBuilder: (context, index) {
         return ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              apartmentImages[index],
-              fit: BoxFit.cover,
-              width: double.infinity,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) {
-                  return child;
-                }
-                return Container(
-                    height: 200,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: LinearImageLoadingProgress(
-                      loadingProgress: loadingProgress,
-                    ));
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return Image.asset(
-                  AppAsset.apartment,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                );
-              },
-            ).onTap(() {
-              $navigate.toWithParameters(ViewMutipleImage.route,
-                  args: ViewMutiplePageData(
-                    images: apartmentImages,
-                    currentImageIndex: index,
-                  ));
-            }));
+          borderRadius: BorderRadius.circular(8),
+          child: StayverseNetworkImage(
+            url: resolvedImages[index],
+            assetFallback: AppAsset.apartment,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 200,
+          ).onTap(() {
+            $navigate.toWithParameters(
+              ViewMutipleImage.route,
+              args: ViewMutiplePageData(
+                images: resolvedImages,
+                currentImageIndex: index,
+              ),
+            );
+          }),
+        );
       },
     );
   }
