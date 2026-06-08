@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AdminImage } from "@/components/AdminImage";
+import { cn } from "@/lib/utils";
 import { ServiceStatus } from "@/types";
 import { Apartment } from "@/types/apartment";
 import { Ride } from "@/types/ride";
