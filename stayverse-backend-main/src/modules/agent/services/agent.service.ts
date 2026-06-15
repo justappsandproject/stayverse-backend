@@ -130,7 +130,11 @@ export class AgentService {
     newUser.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
     await newUser.save();
 
-    return { message: 'Agent created successfully', chatToken };
+    return {
+      message: 'Agent created successfully',
+      chatToken,
+      otp: response.otp,
+    };
   }
 
   async updateProfile(userId: string, dto: UpdateUserDto) {
