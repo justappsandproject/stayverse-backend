@@ -36,6 +36,14 @@ export class OtpService {
         try {
             const response = await this.emailService.sendEmail(email, subject, message);
             if (!response) {
+                const allowFallback = this.configService.get('mail.logOtpFallback') !== false
+                    && this.configService.get('mail.logOtpFallback') !== 'false';
+                if (allowFallback && otp) {
+                    this.logger.warn(
+                        `Email delivery failed for ${email}; OTP log fallback enabled — registration may continue.`,
+                    );
+                    return { status: true, otp };
+                }
                 this.logger.warn(`Failed to send ${type} email to ${email}`);
                 return { status: false };
             }

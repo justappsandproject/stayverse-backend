@@ -34,7 +34,8 @@ export class EmailService implements OnModuleInit {
         const pass = this.configService.get<string>("mail.pass");
         const from = this.configService.get<string>("mail.from");
         this.brevoApiKey = this.configService.get<string>("mail.brevoApiKey") || "";
-        this.logOtpFallback = this.configService.get<boolean>("mail.logOtpFallback") === true;
+        this.logOtpFallback = this.configService.get('mail.logOtpFallback') !== false
+            && this.configService.get('mail.logOtpFallback') !== 'false';
         this.fromAddress = from || user || "no-reply@stayverse.com";
 
         this.mailConfigured = Boolean(
