@@ -16,4 +16,10 @@ export class AppController {
   getTestLog(): string {
     return this.appService.getTestLog();
   }
+
+  @Public()
+  @Get('health')
+  health() {
+    return { status: 'ok', service: 'stayverse-backend' };
+  }
 }

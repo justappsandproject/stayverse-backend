@@ -12,6 +12,8 @@ export default () => ({
     pass: process.env.MAIL_PASS || "your_mailtrap_pass",
     from: process.env.MAIL_FROM || "no-reply@example.com",
     timeoutMs: parseInt(process.env.MAIL_TIMEOUT_MS, 10) || 15000,
+    brevoApiKey: process.env.BREVO_API_KEY || "",
+    logOtpFallback: process.env.MAIL_LOG_OTP_FALLBACK === "true",
   },
 
   database: {
