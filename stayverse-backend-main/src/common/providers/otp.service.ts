@@ -15,6 +15,22 @@ export class OtpService {
     private readonly logger = new Logger(OtpService.name);
 
     constructor(private readonly emailService: EmailService, private configService: ConfigService) { }
+
+    private otpFallbackAllowed(): boolean {
+        const raw = process.env.MAIL_LOG_OTP_FALLBACK ?? this.configService.get('mail.logOtpFallback');
+        return raw !== false && raw !== 'false';
+    }
+
+    private completeWithFallback(email: string, otp?: string): EmailResponse {
+        if (this.otpFallbackAllowed() && otp) {
+            this.logger.warn(
+                `Email delivery failed for ${email}; OTP fallback enabled — OTP=${otp}`,
+            );
+            return { status: true, otp };
+        }
+        return { status: false };
+    }
+
     async sendEmailMessage(email: string, name: string, type: EmailType): Promise<EmailResponse> {
         let subject: string;
         let message: string;
@@ -36,21 +52,16 @@ export class OtpService {
         try {
             const response = await this.emailService.sendEmail(email, subject, message);
             if (!response) {
-                const allowFallback = this.configService.get('mail.logOtpFallback') !== false
-                    && this.configService.get('mail.logOtpFallback') !== 'false';
-                if (allowFallback && otp) {
-                    this.logger.warn(
-                        `Email delivery failed for ${email}; OTP log fallback enabled — registration may continue.`,
-                    );
-                    return { status: true, otp };
+                const fallback = this.completeWithFallback(email, otp);
+                if (!fallback.status) {
+                    this.logger.warn(`Failed to send ${type} email to ${email}`);
                 }
-                this.logger.warn(`Failed to send ${type} email to ${email}`);
-                return { status: false };
+                return fallback;
             }
             return { status: true, otp };
         } catch (error) {
             this.logger.error(`Error sending ${type} email to ${email}: ${error.message}`);
-            return { status: false };
+            return this.completeWithFallback(email, otp);
         }
     }
 }
