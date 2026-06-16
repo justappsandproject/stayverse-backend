@@ -16,11 +16,6 @@ export class OtpService {
 
     constructor(private readonly emailService: EmailService, private configService: ConfigService) { }
 
-    private otpFallbackAllowed(): boolean {
-        const raw = process.env.MAIL_LOG_OTP_FALLBACK ?? this.configService.get('mail.logOtpFallback');
-        return raw !== false && raw !== 'false';
-    }
-
     private completeWithFallback(email: string, otp?: string): EmailResponse {
         if (otp) {
             this.logger.warn(

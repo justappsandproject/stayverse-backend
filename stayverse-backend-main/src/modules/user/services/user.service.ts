@@ -86,7 +86,7 @@ export class UserService {
     newUser.pinExpires = dayjs().tz(TIMEZONE).add(OTP_MINUTES, 'minute').toDate();
     await newUser.save();
 
-    final chatToken = this.streamClient.createToken(newUser._id.toString())
+    const chatToken = this.streamClient.createToken(newUser._id.toString());
     return {
       message: 'User created successfully',
       chatToken,
